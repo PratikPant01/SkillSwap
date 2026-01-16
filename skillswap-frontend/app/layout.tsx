@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "../component/navbar";
 import Footer from "../component/footer";
+
+export const metadata: Metadata = {
+  title: "SkillSwap",
+  description: "Exchange skills, learn together.",
+};
 
 export default function RootLayout({
   children,
@@ -17,3 +23,4 @@ export default function RootLayout({
     </html>
   );
 }
+

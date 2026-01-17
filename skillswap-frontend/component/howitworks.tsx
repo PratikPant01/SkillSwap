@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { Search,  MessageCircle, Star } from 'lucide-react';
+
 export default function HowItWorks() {
   return (
    <div className="bg-white py-16 mt-12">

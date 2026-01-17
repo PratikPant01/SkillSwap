@@ -1,6 +1,7 @@
 import Categories from "@/component/categories";
 import FeaturedService from "@/component/featuredsevice";
 import Hero from "@/component/hero";
+import HowItWorks from "@/component/howitworks";
 
 
 export default function Home() {
@@ -9,6 +10,7 @@ export default function Home() {
       <Hero />
       <Categories />
       <FeaturedService />
+      <HowItWorks/>
     </div>
   );
 }

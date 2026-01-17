@@ -28,12 +28,14 @@ export default function LoginPage() {
         <button className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition">
           Login
         </button>
-        <h4>Don't have an SkillSwap Account?</h4>
-        <Link href="/auth/register">Register</Link>
+        <h4 className="text-center text-gray-900 text-sm">Don't have an SkillSwap Account?</h4>
+        <div className="flex justify-center">
+          <Link href="/auth/register" className="rounded-md border-2 border-blue-600 px-20 py-2 text-base font-medium text-blue-600  hover:text-blue-900 hover:border-blue-900 transition">Register</Link>
+        </div>
 
       </div>
     </div>
-    </div>
+    
   );
 }
 

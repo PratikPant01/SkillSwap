@@ -30,7 +30,7 @@ export default function Navbar() {
             Skills
           </Link>
           <Link
-            href="/"
+            href="/browse"
             className="text-slate-900 font-medium hover:text-blue-600 transition-colors"
           >
             Find Work

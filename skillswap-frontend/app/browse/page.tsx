@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import ServiceCard from "../../component/serviceCard";
+import { Search, Funnel} from "lucide-react";
+
 
 
 const allServices = [
@@ -124,14 +127,132 @@ const allServices = [
   },
 ];
 
-export default function BrowseServicesPage(){
-     return (
-           <div className="container mx-auto px-4 py-12">
-                <h1 className="text-3xl font-bold mb-6">Browse Services</h1>
 
-                <p className="text-gray-600">
-                All services will be shown here.
-            </p>
+export default function BrowseServicesPage(){
+
+    const categories = [
+    { id: 'all', label: 'All' },
+    { id: 'design', label: 'Design' },
+    { id: 'development', label: 'Development' },
+    { id: 'video', label: 'Video' },
+    { id: 'writing', label: 'Writing' },
+    { id: 'audio', label: 'Audio' },
+    ];
+    const price = [
+    { id: 'All', label: 'All' },
+    { id: 'free', label: 'Free' },
+    { id: 'low', label: 'Under रु 100' },
+    { id: 'mid', label: 'Between रु 100 and रु 500' },
+    { id: 'high', label: 'Highter than रु 500' },
+    ];
+
+
+     return (
+           <div className="min-h-screen flex flex-col">
+            {/* BLUE HERO */}
+            <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 text-white pt-36 pb-20">
+              <h3 className="text-3xl md:text-4xl font-bold text-center">
+                Browse All Skills Available
+              </h3>
             </div>
+
+            <div className="bg-gray-100 flex-1">
+              {/* Search Bar */}
+              <div className="py-10">
+                <div className="max-w-5xl mx-auto px-4">
+                  <div className="flex items-center gap-4">
+                    {/* Input */}
+                    <div className="flex items-center gap-3 flex-1 bg-white border rounded-xl px-4 h-16 shadow-sm">
+                      <Search className="text-gray-400" size={22} />
+                      <input
+                        type="text"
+                        placeholder="Search For Services..."
+                        className="flex-1 text-lg outline-none text-gray-700 placeholder-gray-400"
+                      />
+                    </div>
+                    
+                    {/* Button */}
+                    
+                    <button className="h-16 bg-blue-600 text-white px-10 rounded-xl hover:bg-blue-700 transition font-medium shadow-md flex items-center gap-2">
+                      <Funnel className="opacity-90" size={22} />
+                      Filter
+                    </button>
+        
+                  </div>
+                </div>
+              </div>
+
+              {/* GRID SECTION */}
+              <div className="pb-16">
+                <div className="max-w-8xl mx-auto px-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-[290px_1fr] gap-6">
+
+                    {/* LEFT: Filter SideBar */}
+                    <aside className="bg-white rounded-xl p-4 h-fit sticky top-24 shadow-sm flex flex-col gap-8">
+                      <div className='flex items-center justify-between'>
+                          <p className='text-1xl font-bold'>Filters</p>
+                          <p className='text-sm text-blue-600 hover:underline'>Clear</p>
+                      </div>
+
+                      <div className='flex flex-col gap-5'>
+                        <p className='text-1xl text-gray-800'>Category</p>
+                          {/*Radio Using array map */}
+                          {categories.map((cat)=>(
+                            <div key={cat.id} className='flex gap-x-2'>
+                              <input type='radio' id={cat.id} name='category-group' className="h-4 w-4 cursor-pointer text-blue-600 focus:ring-blue-500"/>
+                              <label htmlFor={cat.id} className="text-sm text-gray-800 cursor-pointer select-none">{cat.label}</label>
+                            </div>
+                          ))}
+                      </div>
+
+                      <div className='flex flex-col gap-5'>
+                        <p className='text-1xl text-gray-800'>Price</p>
+                          {/*Radio Using array map */}
+                          {price.map((pr)=>(
+                            <div key={pr.id} className='flex gap-x-2'>
+                              <input type='radio' id={pr.id} name='price-group' className="h-4 w-4 cursor-pointer text-blue-600 focus:ring-blue-500"/>
+                              <label htmlFor={pr.id} className="text-sm text-gray-800 cursor-pointer select-none">{pr.label}</label>
+                            </div>
+                          ))}
+                        </div>
+                    </aside>
+
+                    {/* Right Container */}
+                    <section className="space-y-6">
+
+                      {/* FILTER HEADER */}
+                      <div className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
+                        <p className="text-gray-700">
+                          <span className="font-semibold">12</span> services available
+                        </p>
+
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500">Sort by:</span>
+                          <select className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-blue-600">
+                            <option>Recommended</option>
+                            <option>Price: Low to High</option>
+                            <option>Price: High to Low</option>
+                            <option>Rating</option>
+                            <option>Most Reviews</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* POSTS GRID */}
+                      <div className="grid grid-cols-2 gap-6">
+                        {/* Post cards */}
+                        {allServices.map((service)=>(
+                          <ServiceCard key={service.id} service={service}/>
+                        ))}
+                      </div>
+
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
      )
 }

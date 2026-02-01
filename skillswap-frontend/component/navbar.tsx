@@ -7,16 +7,39 @@ import {
   faBars,
   faXmark,
   faMagnifyingGlass,
+  faUser,
+  faChevronDown,
+  faRightFromBracket,
+  faGauge,
 } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // Get auth state directly from context - no need for mounted state
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    setUserMenuOpen(false);
+    setMenuOpen(false);
+  };
+
+  // Get user initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <nav className="fixed top-4 left-1/2 z-50 w-[90%] max-w-7xl -translate-x-1/2 rounded-2xl border border-blue-100 bg-white/80 backdrop-blur-md shadow-lg">
       <div className="flex items-center justify-between px-6 py-3">
-
-        {/* Logo */}
         <Link href="/" className="text-xl font-bold text-blue-600">
           SkillSwap
         </Link>
@@ -62,20 +85,74 @@ export default function Navbar() {
           />
         </div>
 
-        {/* Desktop Auth */}
+        {/* Desktop Auth / User Menu */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/auth/login"
-            className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-700 hover:text-white transition"
-          >
-            Login
-          </Link>
-          <Link
-            href="/auth/register"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
-          >
-            Register
-          </Link>
+          {isAuthenticated && user ? (
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 hover:bg-gray-50 transition"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                  {user.name ? getInitials(user.name) : "U"}
+                </div>
+                <span className="text-sm font-medium text-slate-900">
+                  {user.name || "User"}
+                </span>
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  className={`text-gray-600 text-xs transition-transform ${
+                    userMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* User Dropdown Menu */}
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-2">
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-900 hover:bg-gray-50 transition"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <FontAwesomeIcon icon={faGauge} className="text-blue-600" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-900 hover:bg-gray-50 transition"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <FontAwesomeIcon icon={faUser} className="text-blue-600" />
+                    Profile
+                  </Link>
+                  <hr className="my-2 border-gray-200" />
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition text-left"
+                  >
+                    <FontAwesomeIcon icon={faRightFromBracket} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Link
+                href="/auth/login"
+                className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-600 hover:text-white transition"
+              >
+                Login
+              </Link>
+              <Link
+                href="/auth/register"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -108,44 +185,89 @@ export default function Navbar() {
             <Link
               href="/skills"
               className="text-slate-900 font-medium hover:text-blue-600 transition-colors"
+              onClick={() => setMenuOpen(false)}
             >
               Skills
             </Link>
             <Link
-              href="/"
+              href="/browse"
               className="text-slate-900 font-medium hover:text-blue-600 transition-colors"
+              onClick={() => setMenuOpen(false)}
             >
               Find Work
             </Link>
             <Link
               href="/"
               className="text-slate-900 font-medium hover:text-blue-600 transition-colors"
+              onClick={() => setMenuOpen(false)}
             >
               How It Works
             </Link>
             <Link
               href="/"
               className="text-slate-900 font-medium hover:text-blue-600 transition-colors"
+              onClick={() => setMenuOpen(false)}
             >
               Why Us?
             </Link>
           </div>
 
-          {/* Mobile Auth Buttons */}
-          <div className="flex gap-4 pt-2">
-            <Link
-              href="/auth/login"
-              className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-600 hover:text-white transition"
-            >
-              Login
-            </Link>
-            <Link
-              href="/auth/register"
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
-            >
-              Register
-            </Link>
-          </div>
+          {/* Mobile Auth/User Section */}
+          {isAuthenticated && user ? (
+            <div className="border-t border-gray-200 pt-4 space-y-3">
+              <div className="flex items-center gap-3 pb-2">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                  {user.name ? getInitials(user.name) : "U"}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {user.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-600">{user.email}</p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 text-slate-900 font-medium hover:text-blue-600 transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                <FontAwesomeIcon icon={faGauge} />
+                Dashboard
+              </Link>
+              <Link
+                href="/profile"
+                className="flex items-center gap-2 text-slate-900 font-medium hover:text-blue-600 transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                <FontAwesomeIcon icon={faUser} />
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-red-600 font-medium hover:text-red-700 transition-colors w-full text-left"
+              >
+                <FontAwesomeIcon icon={faRightFromBracket} />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-4 pt-2">
+              <Link
+                href="/auth/login"
+                className="rounded-md border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-600 hover:text-white transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                Login
+              </Link>
+              <Link
+                href="/auth/register"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                Register
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </nav>

@@ -16,8 +16,8 @@ export default function PostPage() {
   return (
     <div className="min-h-screen bg-gray-200">
             {/* BLUE HERO */}
-            <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 text-white pt-36 pb-20">
-                <div className="max-w-7xl mx-auto border-b px-4 py-8">
+            <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 text-white pt-28 pb-10">
+                <div className="max-w-7xl mx-auto px-4 py-8">
                     <div className="text-sm text-blue-200 flex items-center gap-2 mb-4">
                         <span className="cursor-pointer hover:text-white">Home</span>
                         <span>/</span>
@@ -38,7 +38,7 @@ export default function PostPage() {
                             <div className="text-white opacity-70">|</div>
                         <div className="flex items-center gap-2">
                             <span className="text-2xl text-yellow-500 font-bold">★</span>
-                            <span className="text-2xl font-bold">{singleService.rating} </span>
+                            <span className="text-2xl font-bold text-white">{singleService.rating} </span>
                             <span className="text-1xl">({singleService.reviews} reviews)</span>
                         </div>
                             <div className="text-white opacity-70">|</div>
@@ -62,8 +62,21 @@ export default function PostPage() {
                             <span className="text-sm">Kathmandu, Nepal</span>
                         </div>
                     </div>
+
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 w-full mt-10">
+                        <div className="text-center mb-4">
+                            <p className="text-blue-100 text-sm">Service Price</p>
+                            <p className="text-white font-bold  text-3xl">Rs 150</p>
+                        </div>
+                        <button className="w-full bg-white text-1xl text-blue-600 font-bold py-3 rounded-lg transition duration-300 cursor-pointer">Order Now</button>
+                        <button className="w-full mt-3 bg-transparent border border-white hover:bg-white hover:text-blue-600 text-1xl text-white font-bold py-3 rounded-lg transition duration-300 cursor-pointer">Contact Seller</button>
+                    </div>
                     
                 </div>
+            </div>
+            {/* Main Image Section */}
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                
             </div>
         </div>
   );

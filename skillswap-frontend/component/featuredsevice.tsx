@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+
 
 const services = [
   {
@@ -54,9 +56,11 @@ export default function FeaturedService() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">Popular Services</h2>
-          <button className="text-blue-600 border border-blue-600 rounded px-4 py-2 hover:bg-blue-600 hover:text-white transition-colors">
-            See All
-          </button>
+          <Link href="/browse">
+            <button className="text-blue-600 border border-blue-600 rounded px-4 py-2 hover:bg-blue-600 hover:text-white transition-colors">
+              See All
+            </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

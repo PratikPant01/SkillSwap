@@ -6,10 +6,28 @@ export default function CreatePostPage() {
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>("");
     const [imagePreview,setImagePreview] = useState("");
+    const [images, setImages] = useState<string[]>([]);
 
 
-    const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setImagePreview(e.target.value);
+ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+
+        const newImages: string[] = [];
+
+        Array.from(files).forEach(file => {
+            const previewUrl = URL.createObjectURL(file);
+            newImages.push(previewUrl);
+        });
+
+        setImages(prev => {
+            const combined = [...prev, ...newImages];
+            return combined.slice(0,4); // max 4 images
+        });
+    };
+
+    const removeImage = (index:number) => {
+        setImages(prev => prev.filter((_,i) => i !== index));
     };
 
     const addTag = () => {
@@ -133,48 +151,73 @@ export default function CreatePostPage() {
                         </div>
                         )}
 
+                    {/* Image Upload Wala Part */}
                     <div>
-                        {/* Image URL Input Tara this not practical we just upload image from user */}
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Service Image <span className="text-red-500">*</span>
+                            Service Images <span className="text-red-500">*</span>
                         </label>
-                        <input
-                        type="text"
-                        placeholder="Enter image URL"
-                        value={imagePreview}
-                        onChange={handleImageUrlChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
-                        required
-                        />
 
-                        {/* Image Preview */}
-                        <div className="relative inline-block">
-                        
-                        {imagePreview ? (
-                            <>
-                            <img
-                                src={imagePreview}
-                                alt="Preview"
-                                className="w-48 h-32 object-cover rounded-lg border border-gray-200"
+                        <p className="text-sm text-gray-500 mb-3">
+                            Upload up to 4 images. First image is required and will be used as main preview.
+                        </p>
+
+                        {/* Styled Upload Box */}
+                        <label className="cursor-pointer">
+
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleImageUpload}
+                                className="hidden"
+                                required={images.length === 0}
                             />
 
-                            <button
-                                type="button"
-                                onClick={() => setImagePreview("")}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
-                            >
-                                <X size={14} />
-                            </button>
-                            </>
-                        ) : (
-                            <div className="w-48 h-32 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400">
-                            <ImageIcon size={24} />
-                            <span className="text-xs mt-1">Preview</span>
+                            <div className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-gray-500 hover:border-blue-500 hover:bg-blue-50 transition">
+                                <ImageIcon size={28}/>
+                                <span className="mt-2 font-medium">
+                                    Click to upload images
+                                </span>
+                                <span className="text-xs text-gray-400 mt-1">
+                                    Max 4 images • JPG, PNG supported
+                                </span>
                             </div>
-                        )}
+                        </label>
 
+                        {/* Image Preview Grid */}
+                        <div className="flex flex-wrap gap-3 mt-4">
+                            {images.length > 0 ? (
+                                images.map((img,index)=>(
+                                    <div key={index} className="relative inline-block">
+                                        <img
+                                            src={img}
+                                            className="w-48 h-32 object-cover rounded-lg border border-gray-200"
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={()=>removeImage(index)}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                        >
+                                            <X size={14}/>
+                                        </button>
+
+                                        {index===0 && (
+                                            <span className="absolute bottom-1 left-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
+                                                Main
+                                            </span>
+                                        )}
+                                    </div>
+                                ))
+                            ):(
+                                <div className="w-48 h-32 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400">
+                                    <ImageIcon size={24}/>
+                                    <span className="text-xs mt-1">Preview</span>
+                                </div>
+                            )}
                         </div>
                     </div>
+
                 </div>
                 </div>
 

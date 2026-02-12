@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-
+import { PlusCircle} from "lucide-react";
 
 const services = [
   {
@@ -56,6 +56,8 @@ export default function FeaturedService() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">Popular Services</h2>
+
+          <Link href="/post/create"><PlusCircle className="w-12 h-12 text-blue-600 hover:text-blue-800 cursor-pointer" /></Link>{/* Temporary remove this later hai */}
           <Link href="/browse">
             <button className="text-blue-600 border border-blue-600 rounded px-4 py-2 hover:bg-blue-600 hover:text-white transition-colors">
               See All

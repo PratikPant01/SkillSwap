@@ -74,10 +74,106 @@ export default function PostPage() {
                     
                 </div>
             </div>
-            {/* Main Image Section */}
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                
+            {/* MAIN CONTENT */}
+        <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* LEFT CONTENT */}
+            <div className="lg:col-span-2 space-y-6">
+
+                {/* IMAGE PREVIEW */}
+                <div className="bg-white rounded-xl shadow-sm p-4">
+
+                {/* HORIZONTAL SCROLL PLACEHOLDER */}
+                <div className="overflow-x-auto">
+                    <div className="flex gap-4">
+
+                    {/* Placeholder Images */}
+                    {Array.from({ length: 4 }).map((_, index) => (
+                        <div
+                        key={index}
+                        className="h-[400px] w-[600px] flex-shrink-0 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 font-medium text-lg"
+                        >
+                        Image {index + 1} Placeholder
+                        </div>
+                    ))}
+
+                    </div>
+                </div>
+
+                </div>
+
+
+                {/* DESCRIPTION */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">
+                        About This Service
+                    </h2>
+
+                    <p className="text-gray-700 leading-relaxed">
+                        I will design a modern, clean, and professional website UI tailored to your brand.
+                        Includes responsive layouts, modern components, and user-focused design principles.
+                    </p>
+                </div>
+
+                {/* TAGS */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">
+                        Skills & Tags
+                    </h2>
+
+                    <div className="flex flex-wrap gap-2">
+                        {["UI Design","React","Figma"].map(tag => (
+                            <span
+                                key={tag}
+                                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
             </div>
+
+            {/* RIGHT SIDEBAR */}
+            <div className="space-y-6">
+
+                {/* ORDER CARD */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                    <p className="text-gray-500 text-sm mb-1">Service Price</p>
+                    <p className="text-3xl font-bold text-gray-900 mb-4">
+                        Rs {singleService.price}
+                    </p>
+
+                    <button className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">
+                        Order Now
+                    </button>
+
+                    <button className="w-full mt-3 border border-gray-300 font-semibold py-3 rounded-lg hover:bg-gray-50 transition">
+                        Contact Seller
+                    </button>
+                </div>
+
+                {/* SELLER INFO */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h3 className="font-bold text-gray-900 mb-3">Seller Info</h3>
+
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                            {singleService.seller.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div>
+                            <p className="font-semibold">{singleService.seller}</p>
+                            <p className="text-sm text-gray-500">Level 2 Seller</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
         </div>
   );
 }

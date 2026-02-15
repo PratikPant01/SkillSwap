@@ -5,29 +5,50 @@ export default function CreatePostPage() {
     const [postType,setPostType] = useState("paid");
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>("");
-    const [imagePreview,setImagePreview] = useState("");
-    const [images, setImages] = useState<string[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [images, setImages] = useState<File[]>([]);
+
+    const [formData, setFormData] = useState({
+        title: "",
+        category: "",
+        description: "",
+        price: "",
+        deliveryTime: "",
+        revisions: "",
+        location: ""
+        });
+    
+    const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+        ...prev,
+        [name]: value
+    }));
+    };
 
 
- const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
 
-        const newImages: string[] = [];
-
-        Array.from(files).forEach(file => {
-            const previewUrl = URL.createObjectURL(file);
-            newImages.push(previewUrl);
-        });
+        const newFiles = Array.from(files).slice(0, 4); // max 4 files
+        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
 
         setImages(prev => {
-            const combined = [...prev, ...newImages];
-            return combined.slice(0,4); // max 4 images
+            const combinedFiles = [...prev, ...newFiles].slice(0, 4); // ensure max 4 files
+            return combinedFiles;
+        });
+
+        setImagePreviews(prev => {
+            const combinedPreviews = [...prev, ...newPreviews].slice(0, 4);
+            return combinedPreviews;
         });
     };
 
-    const removeImage = (index:number) => {
-        setImages(prev => prev.filter((_,i) => i !== index));
+    const removeImage = (index: number) => {
+        setImages(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     const addTag = () => {
@@ -37,9 +58,44 @@ export default function CreatePostPage() {
     }
      };
 
-  const removeTag = (tagToRemove:string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
+    const removeTag = (tagToRemove:string) => {
+        setTags(tags.filter(tag => tag !== tagToRemove));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+
+    const form = new FormData();
+    form.append("title", formData.title);
+    form.append("category", formData.category);
+    form.append("description", formData.description);
+    form.append("post_type", postType);
+    form.append("price", formData.price ? formData.price : "");
+    form.append("deliveryTime", formData.deliveryTime);
+    form.append("revisions", formData.revisions ? formData.revisions : "");
+    form.append("location", formData.location);
+
+    tags.forEach(tag => form.append("tags[]", tag)); // append tags array
+
+    images.forEach(image => form.append("images", image)); // append each file
+
+    const res = await fetch("http://localhost:5000/posts", {
+        method: "POST",
+        headers: {
+        "Authorization": `Bearer ${token}` // don't set Content-Type; browser sets multipart/form-data automatically
+        },
+        body: form
+    });
+
+    const data = await res.json();
+    console.log(data);
+    };
+
+
+
+
+
   return (
     <div className="min-h-screen bg-gray-200">
         <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 text-white pt-28 pb-5">
@@ -54,7 +110,7 @@ export default function CreatePostPage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 py-8">
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
                 {/* POST TYPE SELECTION */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Post Type</h2>
@@ -105,7 +161,7 @@ export default function CreatePostPage() {
                 <div className="space-y-5">
                     <div>
                         <label className="block text-sm font-semibold text-gray-900 mb-2">Service Title<span className="text-red-600">*</span></label>
-                        <input className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="I will make a modern website UI..." required/>
+                        <input className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="I will make a modern website UI..."  name="title" value={formData.title} onChange={handleChange} required/>
                     </div>
 
                     <div>
@@ -113,7 +169,7 @@ export default function CreatePostPage() {
                         Category <span className="text-red-500">*</span>
                         </label>
                         <select
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" name="category" value={formData.category} onChange={handleChange}
                         required
                         >
                         <option value="">Select a category</option>
@@ -138,6 +194,7 @@ export default function CreatePostPage() {
                             placeholder="1500"
                             min="0"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            name="price" value={formData.price} onChange={handleChange}
                             required
                         />
                         </div>
@@ -186,36 +243,41 @@ export default function CreatePostPage() {
 
                         {/* Image Preview Grid */}
                         <div className="flex flex-wrap gap-3 mt-4">
-                            {images.length > 0 ? (
-                                images.map((img,index)=>(
-                                    <div key={index} className="relative inline-block">
-                                        <img
-                                            src={img}
-                                            className="w-48 h-32 object-cover rounded-lg border border-gray-200"
-                                        />
+                        {imagePreviews.length > 0 ? (
+                            imagePreviews.map((previewUrl, index) => (
+                            <div key={index} className="relative inline-block">
+                                <img
+                                src={previewUrl}
+                                alt={`preview-${index}`}
+                                className="w-48 h-32 object-cover rounded-lg border border-gray-200"
+                                />
 
-                                        <button
-                                            type="button"
-                                            onClick={()=>removeImage(index)}
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
-                                        >
-                                            <X size={14}/>
-                                        </button>
+                                {/* Remove Button */}
+                                <button
+                                type="button"
+                                onClick={() => removeImage(index)}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                                >
+                                <X size={14} />
+                                </button>
 
-                                        {index===0 && (
-                                            <span className="absolute bottom-1 left-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
-                                                Main
-                                            </span>
-                                        )}
-                                    </div>
-                                ))
-                            ):(
-                                <div className="w-48 h-32 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400">
-                                    <ImageIcon size={24}/>
-                                    <span className="text-xs mt-1">Preview</span>
-                                </div>
-                            )}
+                                {/* Main Image Label */}
+                                {index === 0 && (
+                                <span className="absolute bottom-1 left-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
+                                    Main
+                                </span>
+                                )}
+                            </div>
+                            ))
+                        ) : (
+                            // Placeholder when no images uploaded
+                            <div className="w-48 h-32 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400">
+                            <ImageIcon size={24} />
+                            <span className="text-xs mt-1">Preview</span>
+                            </div>
+                        )}
                         </div>
+
                     </div>
 
                 </div>
@@ -233,6 +295,7 @@ export default function CreatePostPage() {
                             placeholder="Describe your service in detail..."
                             rows={8}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            name="description" value={formData.description} onChange={handleChange}
                             required
                         />
                         <p className="text-sm text-gray-500 mt-2">
@@ -253,6 +316,7 @@ export default function CreatePostPage() {
                 </label>
                 <select
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    name="deliveryTime" value={formData.deliveryTime} onChange={handleChange}
                   required
                 >
                   <option value="">Select delivery time</option>
@@ -273,6 +337,7 @@ export default function CreatePostPage() {
                   placeholder="5"
                   min="0"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    name="revisions" value={formData.revisions} onChange={handleChange}
                   required
                 />
               </div>
@@ -286,6 +351,7 @@ export default function CreatePostPage() {
                   type="text"
                   placeholder="Kathmandu, Nepal"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    name="location" value={formData.location} onChange={handleChange}
                   required
                 />
               </div>

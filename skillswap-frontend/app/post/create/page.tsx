@@ -1,12 +1,50 @@
 'use client';
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import { CheckCircle,ImageIcon,X} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+
 export default function CreatePostPage() {
     const [postType,setPostType] = useState("paid");
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState<string>("");
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [images, setImages] = useState<File[]>([]);
+    const {token, isAuthenticated, loading} = useAuth();// for the authentication state
+
+    const router = useRouter();
+
+    useEffect(()=>{
+        console.log("Auth State:", { loading, isAuthenticated, token: token ? "EXISTS" : "NULL" })
+
+        if(!loading){
+            if(!isAuthenticated || !token){
+                console.log("User not authenticated, redirecting to login.")
+                router.push("/auth/login");
+            } 
+        }
+    },[loading, isAuthenticated, token, router])
+
+    if(loading){
+         return (
+            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
+
+    }
+    if (!isAuthenticated || !token) {
+        return (
+            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-gray-600">Redirecting to login...</p>
+                </div>
+            </div>
+        );
+    }
 
     const [formData, setFormData] = useState({
         title: "",
@@ -18,7 +56,7 @@ export default function CreatePostPage() {
         location: ""
         });
     
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     setFormData(prev => ({
@@ -64,7 +102,17 @@ export default function CreatePostPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    // const token = localStorage.getItem("token");
+ 
+    // its better to get token from auth from useauth instead of 
+    //local storge
+    if (!isAuthenticated || !token) {
+        alert("Please login to create a post");
+        router.push("/auth/login");
+        return;
+    }
+
+   
 
     const form = new FormData();
     form.append("title", formData.title);

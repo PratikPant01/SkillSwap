@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import pkg from "pg";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
+import fs from "fs";
 import multer from "multer";
 import path from "path";
 

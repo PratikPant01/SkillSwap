@@ -1,5 +1,18 @@
+"use client";
+
 import {Clock,RefreshCw,MapPin} from "lucide-react";
+import MessageChatBox from "@/component/messagechatbox";
+import { useState } from "react";
 export default function PostPage() {
+
+    const [chatUser, setChatUser]=useState<
+    {
+        id: number;
+        name: string;
+    } | null    
+    >(null);
+
+
 
     const singleService = 
     {
@@ -13,6 +26,13 @@ export default function PostPage() {
         category: "Design",
         orders: 120 // This is not fixed hai browse page ma halya xaina yo data
     }
+
+    const sellerUser={
+        id: singleService.id,
+        name:singleService.seller
+    }
+
+
   return (
     <div className="min-h-screen bg-gray-200">
             {/* BLUE HERO */}
@@ -69,7 +89,9 @@ export default function PostPage() {
                             <p className="text-white font-bold  text-3xl">Rs 150</p>
                         </div>
                         <button className="w-full bg-white text-1xl text-blue-600 font-bold py-3 rounded-lg transition duration-300 cursor-pointer">Order Now</button>
-                        <button className="w-full mt-3 bg-transparent border border-white hover:bg-white hover:text-blue-600 text-1xl text-white font-bold py-3 rounded-lg transition duration-300 cursor-pointer">Contact Seller</button>
+                        <button 
+                        onClick={()=> setChatUser(sellerUser)}
+                        className="w-full mt-3 bg-transparent border border-white hover:bg-white hover:text-blue-600 text-1xl text-white font-bold py-3 rounded-lg transition duration-300 cursor-pointer">Contact Seller</button>
                     </div>
                     
                 </div>
@@ -149,7 +171,9 @@ export default function PostPage() {
                         Order Now
                     </button>
 
-                    <button className="w-full mt-3 border border-gray-300 font-semibold py-3 rounded-lg hover:bg-gray-50 transition">
+                    <button
+                    onClick={()=> setChatUser(sellerUser)}
+                    className="w-full mt-3 border border-gray-300 font-semibold py-3 rounded-lg hover:bg-gray-50 transition">
                         Contact Seller
                     </button>
                 </div>
@@ -173,6 +197,10 @@ export default function PostPage() {
             </div>
 
         </div>
+<MessageChatBox
+  user={chatUser}
+  onClose={() => setChatUser(null)}
+/>
 
         </div>
   );

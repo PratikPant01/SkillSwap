@@ -9,8 +9,9 @@ export default function BrowseServicesPage(){
     id: number;
     title: string;
     username: string; // seller in frontend
-    price: number;
+    price: number | null;
     images: string[];
+    post_type: 'free' | 'paid';
   };
 
   const [services, setServices] = useState<Service[]>([]);
@@ -149,6 +150,7 @@ export default function BrowseServicesPage(){
                             id: service.id,
                             title: service.title,
                             seller: service.username,
+                            post_type: service.post_type,
                             rating: 5.0, // temporary
                             reviews: 0,  // temporary
                             price: service.price,

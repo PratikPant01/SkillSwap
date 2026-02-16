@@ -7,38 +7,41 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import multer from "multer";
 import path from "path";
-
+import messageRoutes from "./message.js";
 
 dotenv.config();
 const { Pool } = pkg;
 const app = express();
-//so basically for talking with the backend
+
+// CORS for talking with the backend
 app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
-
 app.use("/uploads", express.static("uploads"));
-
 
 const pool = new Pool({
   connectionString: process.env.DB_URL,
 });
-//request the data from the server
+
+// Make pool available to routes
+app.locals.pool = pool;
+
+// Request the data from the server
 app.get("/", (req, res) => {
   res.send("SkillSwap Backend is running with Database Connection");
 });
-//sends the data to the server 
 
+// Register endpoint
 app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    //hash the password
+    // Hash the password
     const hashedpassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       "INSERT INTO users (email,username,password) VALUES ($1,$2,$3) RETURNING id, email, username",
-      [email, username, hashedpassword],
+      [email, username, hashedpassword]
     );
-    //except the password chai pathauxa cuz its returning the id email and username
+    // Returns the id, email and username (not password)
     res.json({ success: true, user: result.rows[0] });
   } catch (err) {
     console.error("Registration error: ", err);
@@ -46,6 +49,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
+// Login endpoint
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -66,11 +70,12 @@ app.post("/login", async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid email or password" });
     }
-    //jwt token to sotre the session info 
+
+    // JWT token to store the session info
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" },
+      { expiresIn: "7d" }
     );
     res.json({
       success: true,
@@ -84,21 +89,21 @@ app.post("/login", async (req, res) => {
   }
 });
 
-
-// Authenticiation token for Creating Posts
-const authenticateToken = (req,res,next) => {
+// Authentication token middleware for Creating Posts
+const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if(!token) return res.sendStatus(401);
+  if (!token) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.JWT_SECRET, (err,user)=>{
-    if(err) return res.sendStatus(403);
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
     req.user = user; // attaches user info
     next();
   });
 };
 
+// Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -110,7 +115,8 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-// Post Api Route
+
+// Post API Route
 app.post(
   "/posts",
   authenticateToken,
@@ -132,7 +138,7 @@ app.post(
       const userId = req.user.id;
 
       // Files from multer
-      const images = req.files.map(file => file.path); // Save file paths in DB
+      const images = req.files.map((file) => file.path); // Save file paths in DB
 
       const tagsArray = Array.isArray(tags) ? tags : tags ? [tags] : [];
 
@@ -171,7 +177,6 @@ app.post(
 //Api endpoint for the create post page to fetch the posts from the database and display it on the frontend
 app.get("/posts", async (req, res) => {
   try {
-
     const result = await pool.query(`
       SELECT posts.*, users.username
       FROM posts
@@ -180,7 +185,6 @@ app.get("/posts", async (req, res) => {
     `);
 
     res.json(result.rows);
-
   } catch (err) {
     console.error("Fetch posts error:", err);
     res.status(500).json({ success: false });
@@ -210,6 +214,9 @@ app.get("/posts/:id", async (req, res) => {
   }
 });
 
+// Message routes (with authentication)
+app.use("/", authenticateToken, messageRoutes);
+
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log`Server running on port ${PORT}`);
-app.listen(PORT ,()=> console.log `baka` )
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

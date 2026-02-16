@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 export default function ServiceCard({ service }: { service: any }) {
+  const isFree = service.post_type === "free";
   return (
     <Link href={`/post/${service.id}`}>
       <div className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
@@ -45,10 +46,20 @@ export default function ServiceCard({ service }: { service: any }) {
             <span className="text-gray-500 text-sm">({service.reviews})</span>
           </div>
 
-          {/* Price */}
+          {/* Price Section */}
           <div className="flex items-center justify-between pt-3 border-t">
-            <span className="text-gray-600 text-sm">Starting at</span>
-            <span className="text-xl font-bold"> रु {service.price}</span>
+            <span className="text-gray-600 text-sm">
+              {isFree ? "Offer Type" : "Starting at"}
+            </span>
+            {isFree ? (
+              <span className="text-xl font-extrabold text-green-600 bg-green-50 px-3 py-1 rounded-md border border-green-200 uppercase tracking-wider">
+                Free
+              </span>
+            ) : (
+              <span className="text-xl font-bold text-gray-900">
+                रु {service.price}
+              </span>
+            )}
           </div>
         </div>
       </div>

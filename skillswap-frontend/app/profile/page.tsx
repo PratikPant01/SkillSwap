@@ -12,33 +12,33 @@ import Sidebar from "./componets/sidebar/Sidebar";
 import Toast from "./componets/shared/Toast";
 
 export default function SkillSwapProfile() {
-  const [toast, setToast] = useState(null);
+    const [toast, setToast] = useState(null);
 
-  const handleEdit = (section) => {
-    setToast(section);
-    setTimeout(() => setToast(null), 2500);
-  };
+    const handleEdit = (section) => {
+        setToast(section);
+        setTimeout(() => setToast(null), 2500);
+    };
 
-  return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 font-sans">
-      
+    return (
+        <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 font-sans">
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <ProfileHeader onEdit={handleEdit} />
-            <AboutSection onEdit={handleEdit} />
-            <SkillsTeach onEdit={handleEdit} />
-            <SkillsLearn onEdit={handleEdit} />
-            <PortfolioTabs onEdit={handleEdit} />
-            <Sidebar onEdit={handleEdit} />
-          </div>
 
-          <Sidebar onEdit={handleEdit} />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 space-y-6">
+                        <ProfileHeader onEdit={handleEdit} />
+                        <AboutSection onEdit={handleEdit} />
+                        <SkillsTeach onEdit={handleEdit} />
+                        <SkillsLearn onEdit={handleEdit} />
+                        <PortfolioTabs onEdit={handleEdit} />
+                        <Sidebar onEdit={handleEdit} />
+                    </div>
+
+                    <Sidebar onEdit={handleEdit} />
+                </div>
+            </main>
+
+            {toast && <Toast message={toast} onClose={() => setToast(null)} />}
         </div>
-      </main>
-
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-    </div>
-  );
+    );
 }

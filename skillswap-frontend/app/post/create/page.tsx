@@ -165,7 +165,7 @@ export default function CreatePostPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                    {/* Paid Service */}
+                    {/* Paid Skillpoint Service */}
                     <button
                     type="button"
                     onClick={() => setPostType("paid")}
@@ -176,10 +176,10 @@ export default function CreatePostPage() {
                     }`}
                     >
                     <h3 className="font-semibold text-gray-900 mb-1">
-                        Paid Service
+                        Paid Skillpoint Service
                     </h3>
                     <p className="text-sm text-gray-600">
-                        Offer professional services, set your price, and earn profit from your skills.
+                        Offer professional services, set your price, and earn huge skill points from your skills.
                     </p>
                     </button>
 
@@ -197,7 +197,7 @@ export default function CreatePostPage() {
                         Free / Portfolio
                     </h3>
                     <p className="text-sm text-gray-600">
-                        Provide free work to build your portfolio, gain experience, and improve profile ratings.
+                        Provide free work to build your portfolio, gain experience, or earn skill points to get started.
                     </p>
                     </button>
 
@@ -235,7 +235,7 @@ export default function CreatePostPage() {
                     {postType === "paid" && (
                         <div>
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
-                            Price (Rs) <span className="text-red-500">*</span>
+                            Price (Skillpoints) <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="number"

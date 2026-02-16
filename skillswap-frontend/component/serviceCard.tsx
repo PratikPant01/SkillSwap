@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 export default function ServiceCard({ service }: { service: any }) {
   return (
+    <Link href={`/post/${service.id}`}>
     <div className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
       {/* Service Image */}
       <div className="h-48 bg-white border-b">
@@ -39,5 +41,6 @@ export default function ServiceCard({ service }: { service: any }) {
         </div>
       </div>
     </div>
+    </Link>
   );
 }

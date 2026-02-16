@@ -10,6 +10,7 @@ interface User {
 //basically a object tara with specification
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,12 +44,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = (userData: User, token: string) => {
     setUser(userData);
+    setToken(token);
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   };
@@ -56,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        token,
         isAuthenticated: !!user,
         login,
         logout,

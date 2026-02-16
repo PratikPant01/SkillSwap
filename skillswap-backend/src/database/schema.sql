@@ -5,3 +5,23 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(100) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  post_type TEXT NOT NULL,
+  price INTEGER,
+  delivery_time TEXT,
+  revisions INTEGER,
+  location TEXT,
+  tags TEXT[],
+  images TEXT[],
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+---for fast performance on common queries
+CREATE INDEX idx_posts_user_id ON posts(user_id);
+CREATE INDEX idx_posts_category ON posts(category);
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);

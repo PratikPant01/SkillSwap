@@ -6,15 +6,16 @@ import Verifications from "./Verifications";
 
 type Props = {
   onEdit: (section: string) => void;
+  profile?: any;
 };
 
-export default function Sidebar({ onEdit }: Props) {
+export default function Sidebar({ onEdit, profile }: Props) {
   return (
     <div className="space-y-5">
       <CreditDashboard />
       <QuickStats onEdit={onEdit} />
-      <Languages onEdit={onEdit} />
-      <Education onEdit={onEdit} />
+      <Languages onEdit={onEdit} languages={profile?.languages} />
+      <Education onEdit={onEdit} education={profile?.education} />
       <Verifications />
     </div>
   );

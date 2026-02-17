@@ -8,11 +8,16 @@ import PortfolioTabs from "./componets/main/PortfolioTabs";
 import Sidebar from "./componets/sidebar/Sidebar";
 import Toast from "./componets/shared/Toast";
 import EditProfileModal from "./componets/modals/EditProfileModal";
+import EditEducationModal from "./componets/modals/EditEducationModal";
+import EditLanguagesModal from "./componets/modals/EditLanguagesModal";
 
 export default function SkillSwapProfile() {
     const [toast, setToast] = useState<string | null>(null);
     const [profile, setProfile] = useState<any>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isEduModalOpen, setIsEduModalOpen] = useState(false);
+    const [isLangModalOpen, setIsLangModalOpen] = useState(false);
+
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
     const API_URL = "http://localhost:5000";
 
@@ -39,6 +44,10 @@ export default function SkillSwapProfile() {
     const handleEdit = (section: string) => {
         if (section === "profile-header" || section === "about") {
             setIsEditModalOpen(true);
+        } else if (section === "education") {
+            setIsEduModalOpen(true);
+        } else if (section === "languages") {
+            setIsLangModalOpen(true);
         } else {
             setToast(section);
             setTimeout(() => setToast(null), 2500);
@@ -47,13 +56,15 @@ export default function SkillSwapProfile() {
 
     const handleSaveProfile = async (updatedData: any) => {
         try {
+            const body = { ...profile, ...updatedData };
+
             const res = await fetch(`${API_URL}/profile/me`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify(updatedData)
+                body: JSON.stringify({ ...profile, ...updatedData })
             });
 
             if (res.ok) {
@@ -83,7 +94,7 @@ export default function SkillSwapProfile() {
                         <PortfolioTabs onEdit={handleEdit} />
                     </div>
 
-                    <Sidebar onEdit={handleEdit} />
+                    <Sidebar onEdit={handleEdit} profile={profile} />
                 </div>
             </main>
 
@@ -94,6 +105,20 @@ export default function SkillSwapProfile() {
                 onClose={() => setIsEditModalOpen(false)}
                 onSave={handleSaveProfile}
                 initialData={profile}
+            />
+
+            <EditEducationModal
+                isOpen={isEduModalOpen}
+                onClose={() => setIsEduModalOpen(false)}
+                onSave={handleSaveProfile}
+                initialData={profile?.education}
+            />
+
+            <EditLanguagesModal
+                isOpen={isLangModalOpen}
+                onClose={() => setIsLangModalOpen(false)}
+                onSave={handleSaveProfile}
+                initialData={profile?.languages}
             />
         </div>
     );

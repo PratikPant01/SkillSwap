@@ -5,8 +5,7 @@ import { useState } from "react";
 
 import ProfileHeader from "./componets/main/ProfileHeader";
 import AboutSection from "./componets/main/AboutSection";
-import SkillsTeach from "./componets/main/SkillsTeach";
-import SkillsLearn from "./componets/main/SkillsLearn";
+import SkillsTeach from "./componets/skills/SkillsTeach";
 import PortfolioTabs from "./componets/main/PortfolioTabs";
 import Sidebar from "./componets/sidebar/Sidebar";
 import Toast from "./componets/shared/Toast";
@@ -29,9 +28,8 @@ export default function SkillSwapProfile() {
                         <ProfileHeader onEdit={handleEdit} />
                         <AboutSection onEdit={handleEdit} />
                         <SkillsTeach onEdit={handleEdit} />
-                        <SkillsLearn onEdit={handleEdit} />
                         <PortfolioTabs onEdit={handleEdit} />
-                        <Sidebar onEdit={handleEdit} />
+
                     </div>
 
                     <Sidebar onEdit={handleEdit} />

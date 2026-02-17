@@ -57,7 +57,7 @@ export default function SkillEditor({ skills, setSkills }: Props) {
             key={skill.name}
             name={skill.name}
             icon={getIcon(skill.name)}
-            onRemove={handleRemoveSkill}
+            onRemove={() => handleRemoveSkill(skill.name)}
           />
         ))}
       </div>

@@ -25,3 +25,21 @@ CREATE TABLE posts (
 CREATE INDEX idx_posts_user_id ON posts(user_id);
 CREATE INDEX idx_posts_category ON posts(category);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+
+-- Table for all available skills
+CREATE TABLE skills (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    icon_url VARCHAR(255) -- optional, for icons
+);
+
+-- Table for user's skills
+CREATE TABLE user_skills (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    skill_id INT NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+    type VARCHAR(10) NOT NULL CHECK (type IN ('teach','learn')),
+    proficiency INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, skill_id, type)
+);

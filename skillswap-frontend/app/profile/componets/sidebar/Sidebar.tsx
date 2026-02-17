@@ -1,4 +1,4 @@
-import CTACard from "./CTACard";
+import CreditDashboard from "./CreditDashboard";
 import QuickStats from "./QuickStats";
 import Languages from "./Languages";
 import Education from "./Education";
@@ -11,7 +11,7 @@ type Props = {
 export default function Sidebar({ onEdit }: Props) {
   return (
     <div className="space-y-5">
-      <CTACard />
+      <CreditDashboard />
       <QuickStats onEdit={onEdit} />
       <Languages onEdit={onEdit} />
       <Education onEdit={onEdit} />

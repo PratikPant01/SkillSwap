@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { SetStateAction, useState } from "react";
 
 
 import ProfileHeader from "./componets/main/ProfileHeader";
@@ -11,15 +11,16 @@ import Sidebar from "./componets/sidebar/Sidebar";
 import Toast from "./componets/shared/Toast";
 
 export default function SkillSwapProfile() {
-    const [toast, setToast] = useState(null);
+    const [toast, setToast] = useState<string | null>(null);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
 
-    const handleEdit = (section) => {
+    const handleEdit = (section: string) => {
         setToast(section);
         setTimeout(() => setToast(null), 2500);
     };
 
     return (
-        <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 font-sans">
+        <div className="pt-20 min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50 font-sans">
 
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -27,7 +28,7 @@ export default function SkillSwapProfile() {
                     <div className="lg:col-span-2 space-y-6">
                         <ProfileHeader onEdit={handleEdit} />
                         <AboutSection onEdit={handleEdit} />
-                        <SkillsTeach onEdit={handleEdit} />
+                        <SkillsTeach token={token}/>
                         <PortfolioTabs onEdit={handleEdit} />
 
                     </div>

@@ -10,7 +10,7 @@ export default function ProfileHeader({ onEdit }: Props) {
       <EditButton onClick={() => onEdit("profile-header")} title="Edit Profile" />
 
       <div className="flex flex-col sm:flex-row gap-6 items-start">
-        <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-blue-800 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+        <div className="w-28 h-28 rounded-2xl bg-linear-to-br from-blue-400 via-blue-600 to-blue-800 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
           SJ
         </div>
 

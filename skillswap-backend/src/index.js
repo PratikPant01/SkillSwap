@@ -86,14 +86,14 @@ app.post("/login", async (req, res) => {
 
 
 // Authenticiation token for Creating Posts
-const authenticateToken = (req,res,next) => {
+const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if(!token) return res.sendStatus(401);
+  if (!token) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.JWT_SECRET, (err,user)=>{
-    if(err) return res.sendStatus(403);
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
     req.user = user; // attaches user info
     next();
   });
@@ -210,6 +210,86 @@ app.get("/posts/:id", async (req, res) => {
   }
 });
 
+// Get all skills
+app.get("/skills", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM skills ORDER BY name");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Get skills error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Add a new system skill
+app.post("/skills", async (req, res) => {
+  const { name, icon_url } = req.body;
+  try {
+    const result = await pool.query(
+      "INSERT INTO skills (name, icon_url) VALUES ($1, $2) RETURNING *",
+      [name, icon_url]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Add skill error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Get current user's skills
+app.get("/user-skills", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      `SELECT us.id AS user_skill_id, us.type, us.proficiency, s.id AS skill_id, s.name, s.icon_url
+       FROM user_skills us
+       JOIN skills s ON us.skill_id = s.id
+       WHERE us.user_id = $1
+       ORDER BY us.created_at DESC`,
+      [userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Get user skills error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Add a skill to current user
+app.post("/user-skills", authenticateToken, async (req, res) => {
+  const { skill_id, type, proficiency } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO user_skills (user_id, skill_id, type, proficiency)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [userId, skill_id, type, proficiency || 0]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Add user skill error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Delete a skill from current user
+app.delete("/user-skills/:id", authenticateToken, async (req, res) => {
+  const userSkillId = req.params.id;
+  try {
+    await pool.query("DELETE FROM user_skills WHERE id=$1 AND user_id=$2", [
+      userSkillId,
+      req.user.id,
+    ]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Delete user skill error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log`Server running on port ${PORT}`);
-app.listen(PORT ,()=> console.log `baka` )
+app.listen(PORT, () => console.log`baka`)

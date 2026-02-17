@@ -12,7 +12,7 @@ interface Conversation {
   last_message: string | null;
   last_message_time: string | null;
   unread_count: number;
-  updated_at: string;
+  updated_at: string;3
 }
 
 export default function MessagesPage() {

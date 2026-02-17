@@ -7,6 +7,8 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +19,7 @@ export default function RegisterPage() {
 
   const handleRegister = async () => {
     setError("");
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !firstName || !lastName) {
       setError("All fields are required");
       return;
     }
@@ -31,7 +33,7 @@ export default function RegisterPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, first_name: firstName, last_name: lastName }),
       });
 
       const registerData = await registerRes.json();
@@ -90,6 +92,38 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-100 flex justify-center items-center">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm flex flex-col gap-6">
         <h2 className="text-3xl font-bold text-black text-center">Register</h2>
+
+        {/* First Name & Last Name */}
+        <div className="flex gap-4">
+          <div className="relative w-full">
+            <User
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder="First Name"
+              className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <div className="relative w-full">
+            <User
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder="Last Name"
+              className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+        </div>
 
         {/* Username */}
         <div className="relative w-full">

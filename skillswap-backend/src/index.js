@@ -32,20 +32,20 @@ app.get("/", (req, res) => {
 
 // Register endpoint
 app.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, first_name, last_name } = req.body;
 
   try {
     // Hash the password
     const hashedpassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      "INSERT INTO users (email,username,password) VALUES ($1,$2,$3) RETURNING id, email, username",
-      [email, username, hashedpassword]
+      "INSERT INTO users (email, username, password, first_name, last_name) VALUES ($1,$2,$3,$4,$5) RETURNING id, email, username, first_name, last_name",
+      [email, username, hashedpassword, first_name, last_name]
     );
     // Returns the id, email and username (not password)
     res.json({ success: true, user: result.rows[0] });
   } catch (err) {
     console.error("Registration error: ", err);
-    res.status(500).json({ success: false, message: "Registration failed" });
+    res.status(500).json({ success: false, message: "Registration failed or User already exists" });
   }
 });
 
@@ -89,12 +89,9 @@ app.post("/login", async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
 
-// Authenticiation token for Creating Posts
-=======
 // Authentication token middleware for Creating Posts
->>>>>>> 26044b02cbad94633b0dacd401e51892729f9db6
+
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -219,7 +216,6 @@ app.get("/posts/:id", async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
 // Get all skills
 app.get("/skills", async (req, res) => {
   try {
@@ -300,15 +296,14 @@ app.delete("/user-skills/:id", authenticateToken, async (req, res) => {
 });
 
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log`Server running on port ${PORT}`);
-app.listen(PORT, () => console.log`baka`)
-=======
+// Profile routes
+import profileRoutes from "./routes/profile.js";
+app.use("/profile", authenticateToken, profileRoutes);
+
 // Message routes (with authentication)
 app.use("/", authenticateToken, messageRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-app.listen(PORT, () => console.log(`Baka`));
->>>>>>> 26044b02cbad94633b0dacd401e51892729f9db6
+

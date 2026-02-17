@@ -247,7 +247,7 @@ export default function SkillsTeach({ token, onEdit }: Props) {
         />
       )}
 
-      <SectionTitle>Skills to Teach</SectionTitle>
+      <SectionTitle>Skills</SectionTitle>
 
       {isEditing ? (
         <div className="mt-4 space-y-6">

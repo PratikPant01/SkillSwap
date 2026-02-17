@@ -16,6 +16,9 @@ const app = express();
 app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
 
+app.use("/uploads", express.static("uploads"));
+
+
 const pool = new Pool({
   connectionString: process.env.DB_URL,
 });
@@ -165,7 +168,47 @@ app.post(
   }
 );
 
+//Api endpoint for the create post page to fetch the posts from the database and display it on the frontend
+app.get("/posts", async (req, res) => {
+  try {
 
+    const result = await pool.query(`
+      SELECT posts.*, users.username
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      ORDER BY posts.created_at DESC
+    `);
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error("Fetch posts error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Get a single post by ID
+app.get("/posts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT posts.*, users.username 
+       FROM posts 
+       JOIN users ON posts.user_id = users.id 
+       WHERE posts.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.json(result.rows[0]); // Return only the single object
+  } catch (err) {
+    console.error("Fetch single post error:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log`Server running on port ${PORT}`);

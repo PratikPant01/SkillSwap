@@ -15,21 +15,39 @@ export default function BrowseServicesPage(){
   };
 
   const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-  const fetchPosts = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/posts");
-      const data = await res.json();
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/posts");
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        // Make sure data is an array
+        if (Array.isArray(data)) {
+          setServices(data);
+        } else {
+          console.error('Expected array but got:', typeof data, data);
+          setServices([]);
+          setError('Invalid data format received');
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError('Failed to load services');
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setServices(data); // assuming backend returns array
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchPosts();
-}, []);
+    fetchPosts();
+  }, []);
 
  
     const categories = [
@@ -45,7 +63,7 @@ export default function BrowseServicesPage(){
     { id: 'free', label: 'Free' },
     { id: 'low', label: 'Under रु 100' },
     { id: 'mid', label: 'Between रु 100 and रु 500' },
-    { id: 'high', label: 'Highter than रु 500' },
+    { id: 'high', label: 'Higher than रु 500' },
     ];
 
 
@@ -92,12 +110,12 @@ export default function BrowseServicesPage(){
                     {/* LEFT: Filter SideBar */}
                     <aside className="bg-white rounded-xl p-4 h-fit sticky top-24 shadow-sm flex flex-col gap-8">
                       <div className='flex items-center justify-between'>
-                          <p className='text-1xl font-bold'>Filters</p>
-                          <p className='text-sm text-blue-600 hover:underline'>Clear</p>
+                          <p className='text-xl font-bold'>Filters</p>
+                          <p className='text-sm text-blue-600 hover:underline cursor-pointer'>Clear</p>
                       </div>
 
                       <div className='flex flex-col gap-5'>
-                        <p className='text-1xl text-gray-800'>Category</p>
+                        <p className='text-lg text-gray-800'>Category</p>
                           {/*Radio Using array map */}
                           {categories.map((cat)=>(
                             <div key={cat.id} className='flex gap-x-2'>
@@ -108,7 +126,7 @@ export default function BrowseServicesPage(){
                       </div>
 
                       <div className='flex flex-col gap-5'>
-                        <p className='text-1xl text-gray-800'>Price</p>
+                        <p className='text-lg text-gray-800'>Price</p>
                           {/*Radio Using array map */}
                           {price.map((pr)=>(
                             <div key={pr.id} className='flex gap-x-2'>
@@ -125,7 +143,7 @@ export default function BrowseServicesPage(){
                       {/* FILTER HEADER */}
                       <div className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
                         <p className="text-gray-700">
-                          <span className="font-semibold">12</span> services available
+                          <span className="font-semibold">{services.length}</span> services available
                         </p>
 
                         <div className="flex items-center gap-2">
@@ -142,23 +160,51 @@ export default function BrowseServicesPage(){
 
                       {/* POSTS GRID */}
                       <div className="grid grid-cols-2 gap-6">
+                        {/* Loading State */}
+                        {loading && (
+                          <div className="col-span-2 text-center py-20">
+                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                            <p className="mt-4 text-gray-600">Loading services...</p>
+                          </div>
+                        )}
+
+                        {/* Error State */}
+                        {error && !loading && (
+                          <div className="col-span-2 text-center py-20">
+                            <p className="text-red-600 mb-2">{error}</p>
+                            <button 
+                              onClick={() => window.location.reload()} 
+                              className="text-blue-600 hover:underline"
+                            >
+                              Try again
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Empty State */}
+                        {!loading && !error && services.length === 0 && (
+                          <div className="col-span-2 text-center py-20">
+                            <p className="text-gray-600 text-lg">No services available yet.</p>
+                          </div>
+                        )}
+
                         {/* Post cards */}
-                        {services.map((service)=>(
+                        {!loading && !error && services.length > 0 && services.map((service)=>(
                           <ServiceCard
-                          key={service.id}
-                          service={{
-                            id: service.id,
-                            title: service.title,
-                            seller: service.username,
-                            post_type: service.post_type,
-                            rating: 5.0, // temporary
-                            reviews: 0,  // temporary
-                            price: service.price,
-                            image: service.images?.[0]
-                              ? `http://localhost:5000/${service.images[0]}`
-                              : null
-                          }}
-                        />
+                            key={service.id}
+                            service={{
+                              id: service.id,
+                              title: service.title,
+                              seller: service.username,
+                              post_type: service.post_type,
+                              rating: 5.0, // temporary
+                              reviews: 0,  // temporary
+                              price: service.price,
+                              image: service.images?.[0]
+                                ? `http://localhost:5000/${service.images[0]}`
+                                : null
+                            }}
+                          />
                         ))}
                       </div>
 

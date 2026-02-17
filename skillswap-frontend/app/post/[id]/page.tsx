@@ -6,12 +6,29 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 
 export default function PostPage() {
-  const params = useParams(); // fetch route param
+  const params = useParams();
   const postId = params?.id;
 
   const [singleService, setSingleService] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [chatUser, setChatUser] = useState<{ id: number; name: string } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [token, setToken] = useState<string>('');
+
+  // Load user authentication data from localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      const user = JSON.parse(storedUser);
+      setCurrentUserId(user.id);
+      console.log('Auth loaded - User ID:', user.id, 'Token exists:', !!storedToken);
+    } else {
+      console.warn('No authentication found - user needs to login');
+    }
+  }, []);
 
   useEffect(() => {
     if (!postId) return;
@@ -20,7 +37,7 @@ export default function PostPage() {
       try {
         const res = await fetch(`http://localhost:5000/posts/${postId}`);
         const data = await res.json();
-        setSingleService(data); // backend returns the post object
+        setSingleService(data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -31,16 +48,23 @@ export default function PostPage() {
     fetchPost();
   }, [postId]);
 
-  if (loading) return <p className="text-center mt-20">Loading post...</p>;
-  if (!singleService) return <p className="text-center mt-20">Post not found!</p>;
+  // Show loading state
+  if (loading) {
+    return <p className="text-center mt-20">Loading post...</p>;
+  }
+
+  // Show not found state
+  if (!singleService) {
+    return <p className="text-center mt-20">Post not found!</p>;
+  }
 
   const sellerUser = {
     id: singleService.user_id,
-    name: singleService.username,
+    name: singleService.username || 'Unknown User',
   };
 
-  // Helper to check if the post is free
   const isFree = singleService.post_type === "free";
+  const userInitial = singleService.username?.charAt(0).toUpperCase() || 'U';
 
   return (
     <div className="min-h-screen bg-gray-200">
@@ -50,17 +74,17 @@ export default function PostPage() {
           <h1 className="text-4xl font-bold mb-4">{singleService.title}</h1>
           
           <div className="flex items-center gap-5 mb-6 text-blue-200">
-            <div className="flex items-center gap-2 ">
-              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-1xl">
-                {singleService.username.charAt(0).toUpperCase()}
+            <div className="flex items-center gap-2">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl">
+                {userInitial}
               </div>
-              <span className="text-1xl text-white font-bold">{singleService.username}</span>
+              <span className="text-xl text-white font-bold">{singleService.username}</span>
             </div>
             <div className="text-white opacity-70">|</div>
             <div className="flex items-center gap-2">
               <span className="text-2xl text-yellow-500 font-bold">★</span>
               <span className="text-2xl font-bold text-white">67</span>
-              <span className="text-1xl">({singleService.reviews || 0} reviews)</span>
+              <span className="text-xl">({singleService.reviews || 0} reviews)</span>
             </div>
           </div>
 
@@ -91,7 +115,7 @@ export default function PostPage() {
             </div>
             <button
               onClick={() => setChatUser(sellerUser)}
-              className="w-full mt-3 bg-transparent border border-white hover:bg-white hover:text-blue-600 text-1xl text-white font-bold py-3 rounded-lg transition duration-300 cursor-pointer"
+              className="w-full mt-3 bg-transparent border border-white hover:bg-white hover:text-blue-600 text-xl text-white font-bold py-3 rounded-lg transition duration-300 cursor-pointer"
             >
               Contact Seller
             </button>
@@ -103,20 +127,22 @@ export default function PostPage() {
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* IMAGES */}
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <div className="overflow-x-auto">
-              <div className="flex gap-4">
-                {singleService.images?.map((img: string, index: number) => (
-                  <img
-                    key={index}
-                    src={`http://localhost:5000/${img}`}
-                    alt={`Image ${index + 1}`}
-                    className="h-[400px] w-[600px] flex-shrink-0 rounded-lg object-cover"
-                  />
-                ))}
+          {singleService.images && singleService.images.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <div className="overflow-x-auto">
+                <div className="flex gap-4">
+                  {singleService.images.map((img: string, index: number) => (
+                    <img
+                      key={index}
+                      src={`http://localhost:5000/${img}`}
+                      alt={`Image ${index + 1}`}
+                      className="h-[400px] w-[600px] flex-shrink-0 rounded-lg object-cover"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* DESCRIPTION */}
           <div className="bg-white rounded-xl shadow-sm p-6">
@@ -125,19 +151,21 @@ export default function PostPage() {
           </div>
 
           {/* TAGS */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Skills & Tags</h2>
-            <div className="flex flex-wrap gap-2">
-              {singleService.tags?.map((tag: string) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200"
-                >
-                  {tag}
-                </span>
-              ))}
+          {singleService.tags && singleService.tags.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Skills & Tags</h2>
+              <div className="flex flex-wrap gap-2">
+                {singleService.tags.map((tag: string, index: number) => (
+                  <span
+                    key={`${tag}-${index}`}
+                    className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm border border-blue-200"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* RIGHT SIDEBAR */}
@@ -166,7 +194,7 @@ export default function PostPage() {
             <h3 className="font-bold text-gray-900 mb-3">Seller Info</h3>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                {singleService.username.charAt(0).toUpperCase()}
+                {userInitial}
               </div>
               <div>
                 <p className="font-semibold">{singleService.username}</p>
@@ -177,7 +205,15 @@ export default function PostPage() {
         </div>
       </div>
 
-      <MessageChatBox user={chatUser} onClose={() => setChatUser(null)} />
+      {/* MESSAGE CHAT BOX */}
+      {currentUserId && token && chatUser && (
+        <MessageChatBox
+          user={chatUser}
+          onClose={() => setChatUser(null)}
+          currentUserId={currentUserId}
+          token={token}
+        />
+      )}
     </div>
   );
 }

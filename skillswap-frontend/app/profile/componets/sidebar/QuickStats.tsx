@@ -4,12 +4,13 @@ type Props = {
   onEdit: (section: string) => void;
 };
 
-export default function QuickStats({ onEdit }: Props) {
+export default function QuickStats({ onEdit, stats: profile }: { onEdit: (section: string) => void; stats: any }) {
   const stats = [
+    { label: "Credits", value: profile?.credits ?? 0, green: true },
     { label: "Total Exchanges", value: "145" },
     { label: "Member Since", value: "Jan 2019" },
     { label: "Response Time", value: "~1 hour" },
-    { label: "Availability", value: "Available Now", green: true },
+    { label: "Availability", value: "Available Now", green: false },
   ];
 
   return (

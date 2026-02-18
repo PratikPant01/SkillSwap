@@ -13,7 +13,7 @@ export default function Sidebar({ onEdit, profile }: Props) {
   return (
     <div className="space-y-5">
       <CreditDashboard />
-      <QuickStats onEdit={onEdit} />
+      <QuickStats onEdit={onEdit} stats={profile} />
       <Languages onEdit={onEdit} languages={profile?.languages} />
       <Education onEdit={onEdit} education={profile?.education} />
       <Verifications />

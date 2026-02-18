@@ -10,7 +10,7 @@ router.get("/me", async (req, res) => {
 
         // Fetch basic profile info
         const profileResult = await pool.query(
-            `SELECT p.*, u.username, u.email, u.first_name, u.last_name
+            `SELECT p.*, u.username, u.email, u.first_name, u.last_name, u.credits
        FROM profiles p
        JOIN users u ON p.user_id = u.id
        WHERE p.user_id = $1`,
@@ -22,7 +22,7 @@ router.get("/me", async (req, res) => {
         if (!profile) {
             // If profile doesn't exist, return basic user info
             const userResult = await pool.query(
-                "SELECT id, username, email, first_name, last_name FROM users WHERE id = $1",
+                "SELECT id, username, email, first_name, last_name, credits FROM users WHERE id = $1",
                 [userId]
             );
             const user = userResult.rows[0];
@@ -33,7 +33,9 @@ router.get("/me", async (req, res) => {
                 username: user.username,
                 email: user.email,
                 first_name: user.first_name,
+                first_name: user.first_name,
                 last_name: user.last_name,
+                credits: user.credits,
                 headline: "",
                 bio: "",
                 location: "",

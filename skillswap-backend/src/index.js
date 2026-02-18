@@ -182,9 +182,15 @@ app.post(
 app.get("/posts", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT posts.*, users.username
+      SELECT 
+        posts.*,
+        users.username,
+        COALESCE(ROUND(AVG(comments.rating),1),0)::float AS average_rating,
+        COUNT(comments.id)::int AS total_comments
       FROM posts
       JOIN users ON posts.user_id = users.id
+      LEFT JOIN comments ON comments.post_id = posts.id
+      GROUP BY posts.id, users.username
       ORDER BY posts.created_at DESC
     `);
 
@@ -194,6 +200,7 @@ app.get("/posts", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
 
 // Get a single post by ID
 app.get("/posts/:id", async (req, res) => {

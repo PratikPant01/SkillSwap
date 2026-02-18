@@ -39,7 +39,7 @@ router.get("/:postId", async (req, res) => {
 
     // Fetch stats: total comments and average rating
     const statsRes = await pool.query(
-      `SELECT COUNT(*)::int as total_comments, COALESCE(AVG(rating),0)::float as average_rating
+      `SELECT COUNT(*)::int as total_comments, COALESCE(ROUND(AVG(comments.rating),1),0)::float AS average_rating
        FROM comments
        WHERE post_id = $1`,
       [postId]

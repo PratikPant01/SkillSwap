@@ -12,6 +12,8 @@ export default function BrowseServicesPage(){
     price: number | null;
     images: string[];
     post_type: 'free' | 'paid';
+    average_rating: number;  
+    total_comments: number;
   };
 
   const [services, setServices] = useState<Service[]>([]);
@@ -197,8 +199,8 @@ export default function BrowseServicesPage(){
                               title: service.title,
                               seller: service.username,
                               post_type: service.post_type,
-                              rating: 5.0, // temporary
-                              reviews: 0,  // temporary
+                              rating: service.average_rating,
+                              reviews: service.total_comments,
                               price: service.price,
                               image: service.images?.[0]
                                 ? `http://localhost:5000/${service.images[0]}`

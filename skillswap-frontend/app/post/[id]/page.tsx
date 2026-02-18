@@ -150,8 +150,8 @@ export default function PostPage() {
             <div className="text-white opacity-70">|</div>
             <div className="flex items-center gap-2">
               <span className="text-2xl text-yellow-500 font-bold">★</span>
-              <span className="text-2xl font-bold text-white">67</span>
-              <span className="text-xl">({singleService.reviews || 0} reviews)</span>
+              <span className="text-2xl font-bold text-white">{(commentStats?.average_rating ?? 0).toFixed(1)}</span>
+              <span className="text-xl">({commentStats?.total_comments ?? 0} reviews)</span>
             </div>
           </div>
 
@@ -219,7 +219,7 @@ export default function PostPage() {
             {/* COMMENT SECTION */}
             <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Comments ({commentStats?.total_comments ?? 0}) - Avg: {(commentStats?.average_rating ?? 0).toFixed(1)}★
+                Comments ({commentStats?.total_comments ?? 0})
               </h2>
 
               {/* Add Comment */}

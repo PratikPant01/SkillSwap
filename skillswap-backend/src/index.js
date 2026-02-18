@@ -8,6 +8,7 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import messageRoutes from "./message.js";
+import commentRoutes from "./comment.js"; 
 
 dotenv.config();
 const { Pool } = pkg;
@@ -17,6 +18,7 @@ const app = express();
 app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
+
 
 const pool = new Pool({
   connectionString: process.env.DB_URL,
@@ -302,6 +304,10 @@ app.use("/profile", authenticateToken, profileRoutes);
 
 // Message routes (with authentication)
 app.use("/", authenticateToken, messageRoutes);
+
+// Comment routes
+app.use("/comments", authenticateToken, commentRoutes);
+
 
 // Start server
 const PORT = process.env.PORT || 5000;

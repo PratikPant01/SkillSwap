@@ -146,3 +146,14 @@ CREATE TRIGGER trigger_update_conversation_timestamp
 AFTER INSERT ON messages
 FOR EACH ROW
 EXECUTE FUNCTION update_conversation_timestamp();
+
+-- Comments Table
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+

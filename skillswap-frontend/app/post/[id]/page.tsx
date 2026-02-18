@@ -15,6 +15,12 @@ export default function PostPage() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [token, setToken] = useState<string>('');
 
+      // Inside PostPage component
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentInput, setCommentInput] = useState("");
+  const [ratingInput, setRatingInput] = useState(5);
+  const [commentStats, setCommentStats] = useState({ average_rating: 0, total_comments: 0 });
+
   // Load user authentication data from localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -48,6 +54,66 @@ export default function PostPage() {
     fetchPost();
   }, [postId]);
 
+  
+  useEffect(() => {
+  if (!postId) return;
+
+  const fetchComments = async () => {
+  if (!postId) return;
+
+  try {
+    const res = await fetch(`http://localhost:5000/comments/${postId}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    // Check if response is JSON first
+    const contentType = res.headers.get("content-type");
+    let data: any;
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      console.warn("Non-JSON response:", text);
+      return;
+    }
+
+    if (data.success) {
+      setComments(data.comments);
+      setCommentStats(data.commentStats);
+    }
+  } catch (err) {
+    console.error("Fetch comments error:", err);
+  }
+};
+
+
+  fetchComments();
+}, [postId, token]);
+
+
+
+  // Submit comment
+  const submitComment = async () => {
+    if (!commentInput || ratingInput < 1) return;
+    try {
+      const res = await fetch(`http://localhost:5000/comments/${postId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ comment: commentInput, rating: ratingInput }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCommentInput("");
+        setRatingInput(5);
+        setComments(prev => [data.comment, ...prev]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Show loading state
   if (loading) {
     return <p className="text-center mt-20">Loading post...</p>;
@@ -62,9 +128,10 @@ export default function PostPage() {
     id: singleService.user_id,
     name: singleService.username || 'Unknown User',
   };
-
   const isFree = singleService.post_type === "free";
   const userInitial = singleService.username?.charAt(0).toUpperCase() || 'U';
+
+  
 
   return (
     <div className="min-h-screen bg-gray-200">
@@ -148,6 +215,54 @@ export default function PostPage() {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">About This Service</h2>
             <p className="text-gray-700 leading-relaxed">{singleService.description}</p>
+
+            {/* COMMENT SECTION */}
+            <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Comments ({commentStats?.total_comments ?? 0}) - Avg: {(commentStats?.average_rating ?? 0).toFixed(1)}★
+              </h2>
+
+              {/* Add Comment */}
+              {currentUserId && (
+                <div className="mb-4">
+                  <textarea
+                    value={commentInput}
+                    onChange={e => setCommentInput(e.target.value)}
+                    placeholder="Write your comment..."
+                    className="w-full border border-gray-300 rounded-lg p-3 mb-2"
+                  />
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>Rating:</span>
+                    {[1,2,3,4,5].map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setRatingInput(n)}
+                        className={`text-xl ${n <= ratingInput ? "text-yellow-500" : "text-gray-300"}`}
+                      >★</button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={submitComment}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    Submit
+                  </button>
+                </div>
+              )}
+
+              {/* Existing Comments */}
+              <ul className="space-y-4">
+                {comments.map(c => (
+                  <li key={c.id} className="border-b border-gray-200 pb-2">
+                    <p className="font-semibold">{c.username} - {c.rating}★</p>
+                    <p>{c.content}</p>
+                    <p className="text-gray-400 text-sm">{new Date(c.created_at).toLocaleString()}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+
           </div>
 
           {/* TAGS */}

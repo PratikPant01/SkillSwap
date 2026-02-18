@@ -1,15 +1,3 @@
--- Drop tables to ensure clean schema update (Dev environment)
-DROP TABLE IF EXISTS messages CASCADE;
-DROP TABLE IF EXISTS conversation_participants CASCADE;
-DROP TABLE IF EXISTS conversations CASCADE;
-DROP TABLE IF EXISTS user_skills CASCADE;
-DROP TABLE IF EXISTS skills CASCADE;
-DROP TABLE IF EXISTS posts CASCADE;
-DROP TABLE IF EXISTS user_languages CASCADE;
-DROP TABLE IF EXISTS user_education CASCADE;
-DROP TABLE IF EXISTS profiles CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,

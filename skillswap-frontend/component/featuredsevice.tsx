@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+import { PlusCircle} from "lucide-react";
 
 const services = [
   {
@@ -21,32 +23,31 @@ const services = [
   },
   {
     id: 3,
-    title: 'I will develop a responsive WordPress website',
-    seller: 'webwizard',
+    title: "I will develop a responsive WordPress website",
+    seller: "webwizard",
     rating: 4.8,
     reviews: 189,
     price: 200,
-    image: 'wordpress website',
+    image: "wordpress website",
   },
   {
     id: 4,
-    title: 'I will edit and enhance your videos professionally',
-    seller: 'videoedit',
+    title: "I will edit and enhance your videos professionally",
+    seller: "videoedit",
     rating: 4.9,
     reviews: 421,
     price: 120,
-    image: 'video editing',
+    image: "video editing",
   },
   {
     id: 5,
-    title: 'I will write SEO optimized content for your website',
-    seller: 'contentking',
+    title: "I will write SEO optimized content for your website",
+    seller: "contentking",
     rating: 5.0,
     reviews: 312,
     price: 90,
-    image: 'content writing',
+    image: "content writing",
   },
- 
 ];
 
 export default function FeaturedService() {
@@ -55,9 +56,13 @@ export default function FeaturedService() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">Popular Services</h2>
-          <button className="text-blue-600 border border-blue-600 rounded px-4 py-2 hover:bg-blue-600 hover:text-white transition-colors">
-            See All
-          </button>
+
+          <Link href="/post/create"><PlusCircle className="w-12 h-12 text-blue-600 hover:text-blue-800 cursor-pointer" /></Link>{/* Temporary remove this later hai */}
+          <Link href="/browse">
+            <button className="text-blue-600 border border-blue-600 rounded px-4 py-2 hover:bg-blue-600 hover:text-white transition-colors">
+              See All
+            </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -67,9 +72,7 @@ export default function FeaturedService() {
               className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
             >
               {/* Service Image */}
-              <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                <span className="text-gray-600 text-lg">{service.image}</span>
-              </div>
+              <div className="h-48 bg-white border-b"></div>
 
               {/* Service Content */}
               <div className="p-4">
@@ -78,7 +81,9 @@ export default function FeaturedService() {
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
                     {service.seller.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-sm text-gray-600">{service.seller}</span>
+                  <span className="text-sm text-gray-600">
+                    {service.seller}
+                  </span>
                 </div>
 
                 {/* Title */}
@@ -98,7 +103,7 @@ export default function FeaturedService() {
                 {/* Price */}
                 <div className="flex items-center justify-between pt-3 border-t">
                   <span className="text-gray-600 text-sm">Starting at</span>
-                  <span className="text-xl font-bold">${service.price}</span>
+                  <span className="text-xl font-bold"> रु {service.price}</span>
                 </div>
               </div>
             </div>

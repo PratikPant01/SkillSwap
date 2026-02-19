@@ -12,6 +12,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // POST /orders/:id/deliver  (seller uploads deliverables)
+// POST /orders/:id/deliver (seller uploads deliverables)
 router.post("/:id/deliver", authenticateToken, upload.array("files", 10), async (req, res) => {
   const pool = req.app.locals.pool;
   const orderId = parseInt(req.params.id, 10);
@@ -20,29 +21,52 @@ router.post("/:id/deliver", authenticateToken, upload.array("files", 10), async 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    
+    // Lock the order and check status
     const order = (await client.query("SELECT * FROM orders WHERE id=$1 FOR UPDATE", [orderId])).rows[0];
-    if (!order) { await client.query("ROLLBACK"); return res.status(404).json({ success:false, message:"Order not found" }); }
-    if (order.seller_id !== sellerId) { await client.query("ROLLBACK"); return res.status(403).json({ success:false, message:"Not allowed" }); }
+    
+    if (!order) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Security check
+    if (order.seller_id !== sellerId) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ success: false, message: "Not allowed" });
+    }
+
+    // Prevent upload if the order is already finalized
+    if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ success: false, message: "Order is already closed" });
+    }
 
     const paths = (req.files || []).map(f => f.path);
+    
+    // Append new files to the existing array and keep/set status to 'DELIVERED'
     await client.query(
       `UPDATE orders 
-       SET seller_delivered_files = COALESCE(seller_delivered_files, ARRAY[]::text[]) || $1, status='DELIVERED', updated_at=NOW()
-       WHERE id=$2`, [paths, orderId]
+       SET seller_delivered_files = COALESCE(seller_delivered_files, ARRAY[]::text[]) || $1, 
+           status='DELIVERED', 
+           updated_at=NOW()
+       WHERE id=$2`, 
+      [paths, orderId]
     );
 
     await client.query("COMMIT");
-    res.json({ success:true });
+    res.json({ success: true, message: "Files uploaded successfully" });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Deliver error:", err);
-    res.status(500).json({ success:false });
+    res.status(500).json({ success: false });
   } finally {
     client.release();
   }
 });
 
 // POST /orders/:id/confirm  (buyer or seller confirms)
+// POST /orders/:id/confirm
 router.post("/:id/confirm", authenticateToken, async (req, res) => {
   const pool = req.app.locals.pool;
   const orderId = parseInt(req.params.id, 10);
@@ -52,32 +76,42 @@ router.post("/:id/confirm", authenticateToken, async (req, res) => {
   try {
     await client.query("BEGIN");
     const order = (await client.query("SELECT * FROM orders WHERE id=$1 FOR UPDATE", [orderId])).rows[0];
-    if (!order) { await client.query("ROLLBACK"); return res.status(404).json({ success:false, message:"Order not found" }); }
+    
+    if (!order) { await client.query("ROLLBACK"); return res.status(404).json({ success:false }); }
 
+    // Update confirmation based on who clicked
     if (userId === order.buyer_id) {
       await client.query("UPDATE orders SET buyer_confirmed = TRUE WHERE id=$1", [orderId]);
     } else if (userId === order.seller_id) {
       await client.query("UPDATE orders SET seller_confirmed = TRUE WHERE id=$1", [orderId]);
-    } else {
-      await client.query("ROLLBACK"); return res.status(403).json({ success:false, message:"Not part of order" });
     }
 
-    const updated = (await client.query("SELECT * FROM orders WHERE id=$1 FOR UPDATE", [orderId])).rows[0];
+    const updated = (await client.query("SELECT * FROM orders WHERE id=$1", [orderId])).rows[0];
 
-    if (updated.buyer_confirmed && updated.seller_confirmed && updated.status !== "COMPLETED") {
-      // release escrow to seller
-      await client.query("UPDATE users SET credits = credits + $1 WHERE id = $2", [updated.escrow_amount, updated.seller_id]);
-      await client.query("INSERT INTO credit_history (user_id, amount, transaction_type, description) VALUES ($1,$2,$3,$4)",
-        [updated.seller_id, updated.escrow_amount, 'EARNED', `Order #${orderId} completed`]);
+    // Check if we can complete (Usually, buyer confirming is enough to trigger payout)
+    if (updated.buyer_confirmed && updated.status !== 'COMPLETED') {
+      const bonus = 50; 
+      const totalPayout = updated.escrow_amount + bonus;
+
+      // 1. Pay the seller (Escrow + 50 Credit Reward)
+      await client.query("UPDATE users SET credits = credits + $1 WHERE id = $2", [totalPayout, updated.seller_id]);
+      
+      // 2. Log it in history
+      await client.query(
+        "INSERT INTO credit_history (user_id, amount, transaction_type, description) VALUES ($1,$2,$3,$4)",
+        [updated.seller_id, totalPayout, 'EARNED', `Order #${orderId} payout + bonus`]
+      );
+
+      // 3. Mark Order and Post as finished
       await client.query("UPDATE orders SET status='COMPLETED', updated_at=NOW() WHERE id=$1", [orderId]);
+      await client.query("UPDATE posts SET status='COMPLETED' WHERE id=$1", [updated.post_id]);
     }
 
     await client.query("COMMIT");
-    res.json({ success:true });
+    res.json({ success: true });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("Confirm error:", err);
-    res.status(500).json({ success:false });
+    res.status(500).json({ success: false });
   } finally {
     client.release();
   }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {Coins} from "lucide-react";
 import {
   faBars,
   faXmark,
@@ -110,7 +111,7 @@ export default function Navbar() {
 
                 {/* ⭐ Credits Display */}
                 <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded-md">
-                  <span className="text-yellow-600">🪙</span>
+                  <Coins className="text-yellow-600" size={14} />
                   <span className="text-sm font-semibold text-yellow-700">
                     {user.credits ?? 0}
                   </span>

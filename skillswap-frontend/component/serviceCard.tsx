@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import {Coins} from "lucide-react";
 import Link from "next/link";
 
 export default function ServiceCard({ service }: { service: any }) {
@@ -70,7 +71,7 @@ export default function ServiceCard({ service }: { service: any }) {
             </span>
           ) : (
             <span className="text-xl font-bold text-gray-900">
-              रु {service.price}
+              <Coins className="inline mr-1 text-yellow-500" size={16} /> {service.price}
             </span>
           )}
         </div>

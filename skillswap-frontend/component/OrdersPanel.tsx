@@ -94,9 +94,14 @@ export default function OrdersPanel({ token, currentUserId }: { token: string, c
 
                 <div className="flex flex-col gap-2 ml-3 shrink-0">
                   {/* If current user is the seller and order in progress -> show Deliver */}
-                  {currentUserId === o.seller_id && o.status === "IN_PROGRESS" && (
-                    <button onClick={() => setDeliverModalFor(o)} className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md">Deliver</button>
-                  )}
+                  {currentUserId === o.seller_id && (o.status === "IN_PROGRESS" || o.status === "DELIVERED") && (
+                  <button 
+                    onClick={() => setDeliverModalFor(o)} 
+                    className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md"
+                  >
+                    {o.status === "DELIVERED" ? "Resend/Update Files" : "Deliver"}
+                  </button>
+                )}
 
                   {/* If order delivered or in_progress, allow confirm */}
                   <button onClick={() => confirm(o.id)} className="text-xs bg-green-50 text-green-600 border border-green-100 px-3 py-1 rounded-md">

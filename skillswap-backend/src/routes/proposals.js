@@ -38,6 +38,7 @@ router.post("/:postId", authenticateToken, upload.array("files", 5), async (req,
 });
 
 // GET /proposals/seller  -> seller sees proposals for his posts
+// GET /proposals/seller 
 router.get("/seller", authenticateToken, async (req, res) => {
   const pool = req.app.locals.pool;
   const sellerId = req.user.id;
@@ -47,12 +48,12 @@ router.get("/seller", authenticateToken, async (req, res) => {
       FROM proposals pr
       JOIN posts ON pr.post_id = posts.id
       JOIN users u ON pr.buyer_id = u.id
-      WHERE posts.user_id = $1
+      WHERE posts.user_id = $1 
+      AND pr.status = 'PENDING'  -- <--- ADD THIS LINE
       ORDER BY pr.created_at DESC
     `, [sellerId])).rows;
     res.json({ success:true, proposals: rows });
   } catch (err) {
-    console.error("Fetch seller proposals:", err);
     res.status(500).json({ success:false });
   }
 });
@@ -111,16 +112,64 @@ router.post("/:id/accept", authenticateToken, async (req, res) => {
   }
 });
 // POST /proposals/:id/reject  -> seller rejects
+// POST /proposals/:id/accept
+// POST /proposals/:id/accept
+router.post("/:id/accept", authenticateToken, async (req, res) => {
+  const pool = req.app.locals.pool;
+  const sellerId = req.user.id;
+  const proposalId = parseInt(req.params.id, 10);
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const pr = (await client.query("SELECT * FROM proposals WHERE id=$1", [proposalId])).rows[0];
+    if (!pr) throw new Error("Proposal not found");
+
+    const post = (await client.query("SELECT * FROM posts WHERE id=$1", [pr.post_id])).rows[0];
+    if (!post || post.user_id !== sellerId) throw new Error("Unauthorized");
+
+    const amount = post.price || 0;
+
+    // Fix: Only check/deduct credits if the post is NOT free
+    if (amount > 0) {
+      const buyerRow = (await client.query("SELECT credits FROM users WHERE id=$1 FOR UPDATE", [pr.buyer_id])).rows[0];
+      if (!buyerRow || buyerRow.credits < amount) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ success: false, message: "Buyer has insufficient credits" });
+      }
+      await client.query("UPDATE users SET credits = credits - $1 WHERE id = $2", [amount, pr.buyer_id]);
+    }
+
+    // Create the order
+    const orderRes = await client.query(
+      `INSERT INTO orders (post_id, proposal_id, buyer_id, seller_id, escrow_amount, status)
+       VALUES ($1,$2,$3,$4,$5,'IN_PROGRESS') RETURNING *`,
+      [pr.post_id, proposalId, pr.buyer_id, sellerId, amount]
+    );
+
+    await client.query("UPDATE proposals SET status='ACCEPTED' WHERE id=$1", [proposalId]);
+
+    await client.query("COMMIT");
+    res.json({ success: true, order: orderRes.rows[0] });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ success: false, message: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /proposals/:id/reject
 router.post("/:id/reject", authenticateToken, async (req, res) => {
   const pool = req.app.locals.pool;
   const proposalId = parseInt(req.params.id, 10);
   try {
-    // optional: verify seller owns post (omitted for brevity, but recommended)
+    // We return the proposalId so the frontend knows which one to remove from the list
     await pool.query("UPDATE proposals SET status='REJECTED' WHERE id=$1", [proposalId]);
-    res.json({ success:true });
+    res.json({ success: true, id: proposalId, status: 'REJECTED' });
   } catch (err) {
-    console.error("Reject proposal error:", err);
-    res.status(500).json({ success:false });
+    res.status(500).json({ success: false });
   }
 });
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle, ImageIcon, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function CreatePostPage() {
     const [postType, setPostType] = useState("paid");
@@ -101,16 +102,16 @@ export default function CreatePostPage() {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        // const token = localStorage.getItem("token");
-
-        // its better to get token from auth from useauth instead of 
-        //local storge
-        if (!isAuthenticated || !token) {
-            alert("Please login to create a post");
-            router.push("/auth/login");
-            return;
-        }
+    e.preventDefault();
+    // const token = localStorage.getItem("token");
+ 
+    // its better to get token from auth from useauth instead of 
+    //local storge
+    if (!isAuthenticated || !token) {
+        alert("Please login to create a post");
+        router.push("/auth/login");
+        return;
+    }
 
 
 
@@ -136,8 +137,8 @@ export default function CreatePostPage() {
             body: form
         });
 
-        const data = await res.json();
-        console.log(data);
+    const data = await res.json();
+    console.log(data);
     };
 
 
@@ -455,27 +456,27 @@ export default function CreatePostPage() {
                         )}
                     </div>
 
-                    {/* ACTION BUTTONS */}
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <button
-                                type="button"
-                                className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                            >
-                                <span>Create Post (10 Credits)</span>
-                                <span className="text-xl">→</span>
-                            </button>        </div>
+                {/* ACTION BUTTONS */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                    <button
+                        type="button"
+                        className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md"
+                    >
+                        Publish Service
+                    </button>
                     </div>
-
-                </form>
-            </div>
+                </div>
+                            
+            </form>
         </div>
+    </div>
 
 
     );

@@ -95,10 +95,12 @@ export default function Navbar() {
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-3 rounded-md border border-gray-200 px-3 py-2 hover:bg-gray-50 transition"
               >
-
-                {/* Avatar */}
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-                  {user.name ? getInitials(user.name) : "U"}
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center overflow-hidden text-white font-semibold text-sm">
+                  {user.profile_picture_url ? (
+                    <img src={user.profile_picture_url} alt={user.name || "User"} className="w-full h-full object-cover" />
+                  ) : (
+                    user.name ? getInitials(user.name) : "U"
+                  )}
                 </div>
 
                 {/* Username */}
@@ -116,9 +118,7 @@ export default function Navbar() {
 
                 <FontAwesomeIcon
                   icon={faChevronDown}
-                  className={`text-gray-600 text-xs transition-transform ${
-                    userMenuOpen ? "rotate-180" : ""
-                  }`}
+                  className={`text-gray-600 text-xs transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
                 />
 
               </button>
@@ -233,8 +233,12 @@ export default function Navbar() {
           {isAuthenticated && user ? (
             <div className="border-t border-gray-200 pt-4 space-y-3">
               <div className="flex items-center gap-3 pb-2">
-                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                  {user.name ? getInitials(user.name) : "U"}
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center overflow-hidden text-white font-semibold">
+                  {user.profile_picture_url ? (
+                    <img src={user.profile_picture_url} alt={user.name || "User"} className="w-full h-full object-cover" />
+                  ) : (
+                    user.name ? getInitials(user.name) : "U"
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900">

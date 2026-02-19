@@ -10,12 +10,13 @@ type EducationItem = {
 type Props = {
   onEdit: (section: string) => void;
   education?: EducationItem[];
+  isPublic?: boolean;
 };
 
-export default function Education({ onEdit, education }: Props) {
+export default function Education({ onEdit, education, isPublic }: Props) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-blue-100 p-6 relative">
-      <EditButton onClick={() => onEdit("education")} title="Edit Education" />
+      {!isPublic && <EditButton onClick={() => onEdit("education")} title="Edit Education" />}
       <h3 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">
         Education
       </h3>

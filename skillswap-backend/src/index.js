@@ -8,7 +8,8 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import messageRoutes from "./message.js";
-import commentRoutes from "./comment.js"; 
+import commentRoutes from "./comment.js";
+import { awardCredits } from "./utils/credits.js";
 
 dotenv.config();
 const { Pool } = pkg;
@@ -40,11 +41,20 @@ app.post("/register", async (req, res) => {
     // Hash the password
     const hashedpassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      "INSERT INTO users (email, username, password, first_name, last_name) VALUES ($1,$2,$3,$4,$5) RETURNING id, email, username, first_name, last_name",
-      [email, username, hashedpassword, first_name, last_name]
+      "INSERT INTO users (email, username, password, first_name, last_name, credits) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, email, username, first_name, last_name, credits",
+      [email, username, hashedpassword, first_name, last_name, 50]
     );
-    // Returns the id, email and username (not password)
-    res.json({ success: true, user: result.rows[0] });
+
+    const newUser = result.rows[0];
+
+    // Log initial credits to history
+    await pool.query(
+      "INSERT INTO credit_history (user_id, amount, transaction_type, description) VALUES ($1, $2, $3, $4)",
+      [newUser.id, 50, 'BONUS', 'Welcome Bonus']
+    );
+
+    // Returns the id, email, username and credits (not password)
+    res.json({ success: true, user: newUser });
   } catch (err) {
     console.error("Registration error: ", err);
     res.status(500).json({ success: false, message: "Registration failed or User already exists" });
@@ -73,17 +83,44 @@ app.post("/login", async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
+    // Fetch profile picture if exists
+    const profileResult = await pool.query("SELECT profile_picture_url FROM profiles WHERE user_id = $1", [user.id]);
+    const profilePictureUrl = profileResult.rows[0]?.profile_picture_url || null;
+
+    // Daily Login Bonus Logic
+    const lastLogin = user.last_login_at;
+    const now = new Date();
+    const isNewDay = !lastLogin || new Date(lastLogin).toDateString() !== now.toDateString();
+
+    if (isNewDay) {
+      await awardCredits(pool, user.id, 2, 'BONUS', 'Daily login bonus');
+      await pool.query("UPDATE users SET last_login_at = $1 WHERE id = $2", [now, user.id]);
+    }
+
     // JWT token to store the session info
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+
+    // Fetch updated credits after bonus
+    const updatedUser = isNewDay
+      ? (await pool.query("SELECT credits FROM users WHERE id = $1", [user.id])).rows[0]
+      : user;
+
     res.json({
       success: true,
-      message: "Login successful",
+      message: isNewDay ? "Login successful + 2 Daily Bonus!" : "Login successful",
       token,
-      user: { id: user.id, email: user.email, username: user.username , credits: user.credits ?? 50, },
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,
+        credits: updatedUser.credits,
+        profile_picture_url: profilePictureUrl
+      },
     });
   } catch (err) {
     console.error("Login error: ", err);
@@ -146,28 +183,58 @@ app.post(
 
       const tagsArray = Array.isArray(tags) ? tags : tags ? [tags] : [];
 
-      const result = await pool.query(
-        `INSERT INTO posts 
-        (user_id, title, category, description, post_type, price,
-          delivery_time, revisions, location, tags, images)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-          RETURNING *`,
-        [
-          userId,
-          title,
-          category,
-          description,
-          post_type,
-          price || null,
-          deliveryTime,
-          revisions || null,
-          location,
-          tagsArray,
-          images,
-        ]
-      );
+      // Check credit balance
+      const userRes = await pool.query("SELECT credits FROM users WHERE id = $1", [userId]);
+      const userCredits = userRes.rows[0]?.credits || 0;
 
-      res.json({ success: true, post: result.rows[0] });
+      if (userCredits < 10) {
+        return res.status(403).json({ success: false, message: "Insufficient credits. You need 10 credits to post." });
+      }
+
+      // Start transaction
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+
+        // 1. Deduct cost for posting
+        await awardCredits(client, userId, -10, 'SPENT', 'Service posting fee');
+
+        // 2. Award bonus for sharing a skill
+        await awardCredits(client, userId, 5, 'BONUS', 'Sharing a skill bonus');
+
+        const result = await client.query(
+          `INSERT INTO posts 
+        (user_id, title, category, description, post_type, price,
+          delivery_time, revisions, location, tags, images, status)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, 'OPEN')
+          RETURNING *`,
+          [
+            userId,
+            title,
+            category,
+            description,
+            post_type,
+            price || null,
+            deliveryTime,
+            revisions || null,
+            location,
+            tagsArray,
+            images,
+          ]
+        );
+
+        await client.query("COMMIT");
+        res.json({
+          success: true,
+          message: "Post created! -10 credits fee +5 bonus earned.",
+          post: result.rows[0]
+        });
+      } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+      } finally {
+        client.release();
+      }
       console.log("BODY:", req.body);
       console.log("FILES:", req.files);
       console.log("USER:", req.user);
@@ -222,6 +289,106 @@ app.get("/posts/:id", async (req, res) => {
   } catch (err) {
     console.error("Fetch single post error:", err);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Assign a user to a post
+app.post("/posts/:id/assign", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Check if post exists and is OPEN
+    const postRes = await pool.query("SELECT * FROM posts WHERE id = $1", [id]);
+    if (postRes.rows.length === 0) return res.status(404).json({ message: "Post not found" });
+
+    const post = postRes.rows[0];
+    if (post.status !== "OPEN") return res.status(400).json({ message: "Post is not available" });
+    if (post.user_id === userId) return res.status(400).json({ message: "Cannot assign yourself to your own post" });
+
+    // Assign user
+    const result = await pool.query(
+      "UPDATE posts SET assigned_to = $1, status = 'IN_PROGRESS' WHERE id = $2 RETURNING *",
+      [userId, id]
+    );
+
+    res.json({ success: true, post: result.rows[0] });
+  } catch (err) {
+    console.error("Assign post error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Complete a post and reward credits
+app.post("/posts/:id/complete", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const postRes = await pool.query("SELECT * FROM posts WHERE id = $1", [id]);
+    if (postRes.rows.length === 0) return res.status(404).json({ message: "Post not found" });
+
+    const post = postRes.rows[0];
+    if (post.user_id !== userId) return res.status(403).json({ message: "Only the owner can complete the post" });
+    if (post.status !== "IN_PROGRESS") return res.status(400).json({ message: "Post must be in progress to complete" });
+    if (!post.assigned_to) return res.status(400).json({ message: "No user assigned to this post" });
+
+    // Start transaction
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // Update post status
+      await client.query("UPDATE posts SET status = 'COMPLETED' WHERE id = $1", [id]);
+
+      // Reward credits to assigned user
+      await awardCredits(client, post.assigned_to, 50, 'EARNED', `Completed service: ${post.title}`);
+
+      await client.query("COMMIT");
+      res.json({ success: true, message: "Post completed and 50 credits awarded!" });
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("Complete post error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Get credit history
+app.get("/credits/history", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const result = await pool.query(
+      "SELECT id, amount, transaction_type, description, created_at FROM credit_history WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    );
+    res.json({ success: true, history: result.rows });
+  } catch (err) {
+    console.error("Fetch credit history error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Add credits (for testing/purchasing)
+app.post("/credits/add", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const { amount } = req.body; // e.g., 50, 100
+
+  if (!amount || amount <= 0) return res.status(400).json({ message: "Invalid amount" });
+
+  try {
+    const result = await pool.query(
+      "UPDATE users SET credits = credits + $1 WHERE id = $2 RETURNING credits",
+      [amount, userId]
+    );
+    res.json({ success: true, credits: result.rows[0].credits });
+  } catch (err) {
+    console.error("Add credits error:", err);
+    res.status(500).json({ success: false });
   }
 });
 

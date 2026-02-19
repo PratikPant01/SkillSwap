@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     credits INTEGER DEFAULT 50,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Profiles table
@@ -58,6 +59,8 @@ CREATE TABLE IF NOT EXISTS posts (
   location TEXT,
   tags TEXT[],
   images TEXT[],
+  status TEXT DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'IN_PROGRESS', 'COMPLETED')),
+  assigned_to INTEGER REFERENCES users(id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -137,7 +140,7 @@ FOR EACH ROW
 EXECUTE FUNCTION update_conversation_timestamp();
 
 -- Comments Table
-CREATE TABLE comments (
+CREATE TABLE IF NOT EXISTS comments (
     id SERIAL PRIMARY KEY,
     post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -146,3 +149,23 @@ CREATE TABLE comments (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Portfolio Projects Table
+CREATE TABLE IF NOT EXISTS portfolio_projects (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    project_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Credit History Table
+CREATE TABLE IF NOT EXISTS credit_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    amount INTEGER NOT NULL,
+    transaction_type TEXT NOT NULL, -- 'BONUS', 'EARNED', 'SPENT'
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

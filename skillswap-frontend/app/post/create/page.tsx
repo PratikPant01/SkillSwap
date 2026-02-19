@@ -111,8 +111,6 @@ export default function CreatePostPage() {
         alert("Please login to create a post");
         router.push("/auth/login");
         return;
-    
-
     }
 
 
@@ -141,7 +139,6 @@ export default function CreatePostPage() {
 
     const data = await res.json();
     console.log(data);
-    alert("Post created successfully!");
     };
 
 
@@ -462,13 +459,12 @@ export default function CreatePostPage() {
                 {/* ACTION BUTTONS */}
                 <div className="bg-white rounded-xl shadow-sm p-6">
                     <div className="flex flex-col sm:flex-row gap-4">
-                    <Link href="/dashboard"><button
+                    <button
                         type="button"
                         className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
                     >
-                        Go Back
+                        Cancel
                     </button>
-                    </Link>
                     <button
                         type="submit"
                         className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md"

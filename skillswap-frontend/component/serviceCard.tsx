@@ -8,7 +8,7 @@ export default function ServiceCard({ service }: { service: any }) {
   return (
     <Link href={`/post/${service.id}`}>
       <div className="rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-        
+
         {/* Service Image */}
         <div className="h-48 bg-white border-b">
           {service.image ? (
@@ -27,12 +27,16 @@ export default function ServiceCard({ service }: { service: any }) {
         {/* Service Content */}
         <div className="p-4">
           {/* Seller Info */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
-              {service.seller?.charAt(0).toUpperCase()}
+          <Link href={`/profile/${service.seller}`}>
+            <div className="flex items-center gap-2 mb-2 group/seller">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm group-hover/seller:bg-blue-600 transition-colors">
+                {service.seller?.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm text-gray-600 group-hover/seller:text-blue-600 transition-colors font-medium">
+                {service.seller}
+              </span>
             </div>
-            <span className="text-sm text-gray-600">{service.seller}</span>
-          </div>
+          </Link>
 
           {/* Title */}
           <h3 className="text-lg font-semibold mb-3 line-clamp-2">

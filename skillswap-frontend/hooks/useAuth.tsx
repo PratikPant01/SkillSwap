@@ -6,6 +6,7 @@ interface User {
   id?: number;
   name?: string;
   email?: string;
+  profile_picture_url?: string;
 }
 //basically a object tara with specification
 interface AuthContextType {
@@ -14,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
   loading: boolean;
 }
 //creates a context which do not require to pass the props 
@@ -56,6 +58,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("user");
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -64,6 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isAuthenticated: !!user,
         login,
         logout,
+        updateUser,
         loading,
       }}
     >

@@ -29,6 +29,7 @@ import { TbBrandVscode } from "react-icons/tb";
 interface Props {
   token: string;
   onEdit?: (message: string) => void;
+  isPublic?: boolean;
 }
 
 const skillIconMap: Record<string, React.ReactNode> = {
@@ -108,15 +109,15 @@ const skillIconMap: Record<string, React.ReactNode> = {
   "Slack": <SiSlack className="text-purple-500" />,
 };
 
-export default function SkillsTeach({ token, onEdit }: Props) {
+export default function SkillsTeach({ token, onEdit, isPublic }: Props) {
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
   const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [newSkill, setNewSkill] = useState("");
 
   useEffect(() => {
-    if (token) fetchSkills();
-  }, [token]);
+    if (token || isPublic) fetchSkills();
+  }, [token, isPublic]);
 
   const fetchSkills = async () => {
     try {
@@ -240,7 +241,7 @@ export default function SkillsTeach({ token, onEdit }: Props) {
 
   return (
     <div className="relative bg-white rounded-2xl shadow-sm border border-blue-100 p-8">
-      {!isEditing && (
+      {!isEditing && !isPublic && (
         <EditButton
           onClick={() => setIsEditing(true)}
           title="Edit Skills"
@@ -330,7 +331,7 @@ export default function SkillsTeach({ token, onEdit }: Props) {
               key={skill.user_skill_id}
               name={capitalizeSkill(skill.name)}
               icon={getSkillIcon(skill.name)}
-              onRemove={() =>
+              onRemove={isPublic ? undefined : () =>
                 handleRemoveSkill(skill.user_skill_id)
               }
             />

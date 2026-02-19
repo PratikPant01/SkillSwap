@@ -1,6 +1,22 @@
 
 import express from "express";
+import multer from "multer";
+import path from "path";
+
 const router = express.Router();
+
+// Multer storage configuration for profile pictures
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+        cb(null, `profile-${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
+    },
+});
+
+const upload = multer({ storage: storage });
+
 
 // Get current user's profile
 router.get("/me", async (req, res) => {
@@ -10,7 +26,7 @@ router.get("/me", async (req, res) => {
 
         // Fetch basic profile info
         const profileResult = await pool.query(
-            `SELECT p.*, u.username, u.email, u.first_name, u.last_name, u.credits
+            `SELECT p.*, u.username, u.email, u.first_name, u.last_name, u.credits, u.created_at
        FROM profiles p
        JOIN users u ON p.user_id = u.id
        WHERE p.user_id = $1`,
@@ -22,7 +38,7 @@ router.get("/me", async (req, res) => {
         if (!profile) {
             // If profile doesn't exist, return basic user info
             const userResult = await pool.query(
-                "SELECT id, username, email, first_name, last_name, credits FROM users WHERE id = $1",
+                "SELECT id, username, email, first_name, last_name, credits, created_at FROM users WHERE id = $1",
                 [userId]
             );
             const user = userResult.rows[0];
@@ -36,6 +52,7 @@ router.get("/me", async (req, res) => {
                 first_name: user.first_name,
                 last_name: user.last_name,
                 credits: user.credits,
+                created_at: user.created_at,
                 headline: "",
                 bio: "",
                 location: "",
@@ -58,10 +75,28 @@ router.get("/me", async (req, res) => {
             [userId]
         );
 
+        // Fetch portfolio projects
+        const portfolioResult = await pool.query(
+            "SELECT * FROM portfolio_projects WHERE user_id = $1 ORDER BY created_at DESC",
+            [userId]
+        );
+
+        // Fetch completed services (posts assigned to user that are COMPLETED)
+        const servicesResult = await pool.query(
+            `SELECT p.*, u.username as owner_username 
+             FROM posts p
+             JOIN users u ON p.user_id = u.id
+             WHERE p.assigned_to = $1 AND p.status = 'COMPLETED'
+             ORDER BY p.created_at DESC`,
+            [userId]
+        );
+
         res.json({
             ...profile,
             education: eduResult.rows,
             languages: langResult.rows,
+            portfolio: portfolioResult.rows,
+            completed_services: servicesResult.rows,
         });
     } catch (err) {
         console.error("Get profile error:", err);
@@ -198,4 +233,118 @@ router.get("/:username", async (req, res) => {
     }
 });
 
+// --- Portfolio Endpoints ---
+
+// Upload portfolio project image
+router.post("/portfolio/upload", upload.single("image"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const filePath = req.file.path.replace(/\\/g, "/"); // Normalize path for web
+        const imageUrl = `http://localhost:5000/${filePath}`;
+
+        res.json({ success: true, imageUrl });
+    } catch (err) {
+        console.error("Portfolio image upload error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// Add portfolio project
+router.post("/portfolio", async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const pool = req.app.locals.pool;
+        const { title, description, image_url, project_url } = req.body;
+
+        const result = await pool.query(
+            `INSERT INTO portfolio_projects (user_id, title, description, image_url, project_url)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [userId, title, description, image_url, project_url]
+        );
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Add portfolio error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// Update portfolio project
+router.put("/portfolio/:id", async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id } = req.params;
+        const pool = req.app.locals.pool;
+        const { title, description, image_url, project_url } = req.body;
+
+        const result = await pool.query(
+            `UPDATE portfolio_projects 
+             SET title = $1, description = $2, image_url = $3, project_url = $4
+             WHERE id = $5 AND user_id = $6 RETURNING *`,
+            [title, description, image_url, project_url, id, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Portfolio project not found" });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Update portfolio error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// Delete portfolio project
+router.delete("/portfolio/:id", async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id } = req.params;
+        const pool = req.app.locals.pool;
+
+        await pool.query(
+            "DELETE FROM portfolio_projects WHERE id = $1 AND user_id = $2",
+            [id, userId]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("Delete portfolio error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// --- Photo Upload ---
+
+router.post("/upload-photo", upload.single("photo"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const userId = req.user.id;
+        const pool = req.app.locals.pool;
+        const filePath = req.file.path.replace(/\\/g, "/"); // Normalize path for web
+        const photoUrl = `http://localhost:5000/${filePath}`;
+
+        // Update profile with new photo URL
+        await pool.query(
+            `INSERT INTO profiles (user_id, profile_picture_url, updated_at)
+             VALUES ($1, $2, NOW())
+             ON CONFLICT (user_id) 
+             DO UPDATE SET profile_picture_url = EXCLUDED.profile_picture_url, updated_at = NOW()`,
+            [userId, photoUrl]
+        );
+
+        res.json({ success: true, photoUrl });
+    } catch (err) {
+        console.error("Upload photo error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 export default router;
+

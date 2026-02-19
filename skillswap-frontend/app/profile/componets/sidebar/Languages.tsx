@@ -8,12 +8,13 @@ type LanguageItem = {
 type Props = {
   onEdit: (section: string) => void;
   languages?: LanguageItem[];
+  isPublic?: boolean;
 };
 
-export default function Languages({ onEdit, languages }: Props) {
+export default function Languages({ onEdit, languages, isPublic }: Props) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-blue-100 p-6 relative">
-      <EditButton onClick={() => onEdit("languages")} title="Edit Languages" />
+      {!isPublic && <EditButton onClick={() => onEdit("languages")} title="Edit Languages" />}
       <h3 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">
         Languages
       </h3>

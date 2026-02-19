@@ -11,41 +11,10 @@ export default function CreatePostPage() {
     const [tagInput, setTagInput] = useState<string>("");
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [images, setImages] = useState<File[]>([]);
-    const { token, isAuthenticated, loading } = useAuth();// for the authentication state
+    const [submitting, setSubmitting] = useState(false);
+    const { token, isAuthenticated, loading } = useAuth();
 
     const router = useRouter();
-
-    useEffect(() => {
-        console.log("Auth State:", { loading, isAuthenticated, token: token ? "EXISTS" : "NULL" })
-
-        if (!loading) {
-            if (!isAuthenticated || !token) {
-                console.log("User not authenticated, redirecting to login.")
-                router.push("/auth/login");
-            }
-        }
-    }, [loading, isAuthenticated, token, router])
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading...</p>
-                </div>
-            </div>
-        );
-
-    }
-    if (!isAuthenticated || !token) {
-        return (
-            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-gray-600">Redirecting to login...</p>
-                </div>
-            </div>
-        );
-    }
 
     const [formData, setFormData] = useState({
         title: "",
@@ -57,32 +26,51 @@ export default function CreatePostPage() {
         location: ""
     });
 
+    useEffect(() => {
+        console.log("Auth State:", { loading, isAuthenticated, token: token ? "EXISTS" : "NULL" });
+        if (!loading) {
+            if (!isAuthenticated || !token) {
+                console.log("User not authenticated, redirecting to login.");
+                router.push("/auth/login");
+            }
+        }
+    }, [loading, isAuthenticated, token, router]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated || !token) {
+        return (
+            <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-gray-600">Redirecting to login...</p>
+                </div>
+            </div>
+        );
+    }
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
-
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
 
-        const newFiles = Array.from(files).slice(0, 4); // max 4 files
+        const newFiles = Array.from(files).slice(0, 4);
         const newPreviews = newFiles.map(file => URL.createObjectURL(file));
 
-        setImages(prev => {
-            const combinedFiles = [...prev, ...newFiles].slice(0, 4); // ensure max 4 files
-            return combinedFiles;
-        });
-
-        setImagePreviews(prev => {
-            const combinedPreviews = [...prev, ...newPreviews].slice(0, 4);
-            return combinedPreviews;
-        });
+        setImages(prev => [...prev, ...newFiles].slice(0, 4));
+        setImagePreviews(prev => [...prev, ...newPreviews].slice(0, 4));
     };
 
     const removeImage = (index: number) => {
@@ -102,18 +90,15 @@ export default function CreatePostPage() {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // const token = localStorage.getItem("token");
- 
-    // its better to get token from auth from useauth instead of 
-    //local storge
-    if (!isAuthenticated || !token) {
-        alert("Please login to create a post");
-        router.push("/auth/login");
-        return;
-    }
+        e.preventDefault();
 
+        if (!isAuthenticated || !token) {
+            alert("Please login to create a post");
+            router.push("/auth/login");
+            return;
+        }
 
+        setSubmitting(true);
 
         const form = new FormData();
         form.append("title", formData.title);
@@ -125,23 +110,33 @@ export default function CreatePostPage() {
         form.append("revisions", formData.revisions ? formData.revisions : "");
         form.append("location", formData.location);
 
-        tags.forEach(tag => form.append("tags[]", tag)); // append tags array
+        tags.forEach(tag => form.append("tags[]", tag));
+        images.forEach(image => form.append("images", image));
 
-        images.forEach(image => form.append("images", image)); // append each file
+        try {
+            const res = await fetch("http://localhost:5000/posts", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: form
+            });
 
-        const res = await fetch("http://localhost:5000/posts", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}` // don't set Content-Type; browser sets multipart/form-data automatically
-            },
-            body: form
-        });
+            const data = await res.json();
+            console.log(data);
 
-    const data = await res.json();
-    console.log(data);
+            if (data.success) {
+                router.push(`/post/${data.post.id}`); // 
+            } else {
+                alert(data.message || "Failed to create post. Please try again.");
+            }
+        } catch (err) {
+            console.error("Submit error:", err);
+            alert("Something went wrong. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
     };
-
-
 
 
 
@@ -460,11 +455,12 @@ export default function CreatePostPage() {
                 <div className="bg-white rounded-xl shadow-sm p-6">
                     <div className="flex flex-col sm:flex-row gap-4">
                     <button
-                        type="button"
-                        className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                    >
-                        Cancel
-                    </button>
+                                type="button"
+                                onClick={() => router.push("/browse")} // 
+                                className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
                     <button
                         type="submit"
                         className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md"

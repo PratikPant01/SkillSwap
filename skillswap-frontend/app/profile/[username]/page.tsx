@@ -37,6 +37,8 @@ export default function PublicProfilePage() {
                     ...data,
                     username: data.user.username,
                     email: data.user.email,
+                    first_name: data.user.first_name,
+                    last_name: data.user.last_name,
                 };
                 setProfile(flatProfile);
             } else {
@@ -91,7 +93,7 @@ export default function PublicProfilePage() {
                             isPublic={true}
                         />
                         <AboutSection onEdit={noop} bio={profile.bio} isPublic={true} />
-                        <SkillsTeach token="" isPublic={true} />
+                        <SkillsTeach token="" isPublic={true} initialSkills={profile.skills} />
                         <PortfolioTabs
                             portfolio={profile.portfolio || []}
                             completedServices={profile.completed_services || []}

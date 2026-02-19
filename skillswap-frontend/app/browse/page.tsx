@@ -15,6 +15,7 @@ export default function BrowseServicesPage() {
     category: string;
     average_rating: number;
     total_comments: number;
+    profile_picture_url: string | null;
   };
 
   const [services, setServices] = useState<Service[]>([]);
@@ -72,7 +73,7 @@ export default function BrowseServicesPage() {
 
     // 1. Search Query
     if (searchQuery) {
-      result = result.filter(s => 
+      result = result.filter(s =>
         s.title.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -210,7 +211,7 @@ export default function BrowseServicesPage() {
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <span className="text-sm text-gray-500 whitespace-nowrap">Sort by:</span>
-                    <select 
+                    <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className="w-full sm:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 bg-white"
@@ -250,7 +251,8 @@ export default function BrowseServicesPage() {
                         rating: service.average_rating,
                         reviews: service.total_comments,
                         price: service.price,
-                        image: service.images?.[0] ? `http://localhost:5000/${service.images[0]}` : null
+                        image: service.images?.[0] ? `http://localhost:5000/${service.images[0]}` : null,
+                        seller_profile_picture: service.profile_picture_url
                       }}
                     />
                   ))}

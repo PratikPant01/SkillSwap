@@ -21,13 +21,6 @@ const mockInsights = [
   { id: 3, title: "Python for Beginners", views: 521, likes: 44, shares: 23, trend: "+32%" },
 ];
 
-const mockSuggestions = [//static data
-  { id: 1, name: "Aisha Patel", skill: "Figma & Prototyping", rating: 4.9, match: 97, avatar: "A", color: "from-blue-400 to-blue-600" },
-  { id: 2, name: "Marcus Chen", skill: "Backend Engineering", rating: 4.7, match: 89, avatar: "M", color: "from-teal-400 to-green-500" },
-  { id: 3, name: "Sofia Torres", skill: "Data Science", rating: 4.8, match: 85, avatar: "S", color: "from-sky-400 to-blue-500" },
-  { id: 4, name: "James Okafor", skill: "Mobile Dev (Flutter)", rating: 4.6, match: 81, avatar: "J", color: "from-green-400 to-teal-500" },
-];
-
 export default function DashboardPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,11 +78,11 @@ export default function DashboardPage() {
   const unreadCount = conversations.filter(c => c.unread_count > 0).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 p-6 space-y-5">
+    <div className="min-h-screen bg-gray-50 text-gray-800 p-6 space-y-5 py-25">
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight ">Dashboard</h1>
         <p className="text-sm text-gray-500 mt-1">Welcome back — here's what's happening</p>
       </div>
 
@@ -212,50 +205,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row — Connection Suggestions */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-            <Users size={15} className="text-blue-500" />
-            Suggested Connections
-          </div>
-          <button className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors">
-            See all <ArrowRight size={12} />
-          </button>
-        </div>
+     
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-gray-100">
-          {mockSuggestions.map((person) => (
-            <div key={person.id} className="p-5 hover:bg-blue-50/40 transition-colors cursor-pointer">
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${person.color} flex items-center justify-center font-bold text-xl text-white mb-3`}>
-                {person.avatar}
-              </div>
-              <p className="text-sm font-semibold text-gray-800 mb-0.5">{person.name}</p>
-              <p className="text-xs text-gray-400 mb-3">{person.skill}</p>
-              <div className="flex items-center justify-between mb-3">
-                <span className="flex items-center gap-1 text-xs text-blue-500 font-semibold">
-                  <Star size={11} fill="currentColor" />{person.rating}
-                </span>
-                <span className="bg-green-50 text-green-600 text-[11px] font-bold px-2 py-0.5 rounded-full border border-green-200">
-                  {person.match}% match
-                </span>
-              </div>
-              <button className="w-full py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-1.5">
-                <Zap size={11} /> Connect
-              </button>
-            </div>
-          ))}
-        </div>
+        
       </div>
 
-      {/* Chat Box */}
-      {currentUserId && token && selectedUser && (
-        <MessageChatBox
-          user={selectedUser}
-          onClose={() => setSelectedUser(null)}
-          currentUserId={currentUserId}
-          token={token}
-        />
-      )}
-    </div>
+  
   );
 }

@@ -36,6 +36,8 @@ export default function Navbar() {
       .toUpperCase()
       .slice(0, 2);
   };
+  console.log(user);
+
 
   return (
     <nav className="fixed top-4 left-1/2 z-50 w-[90%] max-w-7xl -translate-x-1/2 rounded-2xl border border-blue-100 bg-white/80 backdrop-blur-md shadow-lg">
@@ -91,21 +93,36 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-2 rounded-md border border-gray-200 px-3 py-2 hover:bg-gray-50 transition"
+                className="flex items-center gap-3 rounded-md border border-gray-200 px-3 py-2 hover:bg-gray-50 transition"
               >
+
+                {/* Avatar */}
                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
                   {user.name ? getInitials(user.name) : "U"}
                 </div>
+
+                {/* Username */}
                 <span className="text-sm font-medium text-slate-900">
                   {user.name || "User"}
                 </span>
+
+                {/* ⭐ Credits Display */}
+                <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded-md">
+                  <span className="text-yellow-600">🪙</span>
+                  <span className="text-sm font-semibold text-yellow-700">
+                    {user.credits ?? 0}
+                  </span>
+                </div>
+
                 <FontAwesomeIcon
                   icon={faChevronDown}
                   className={`text-gray-600 text-xs transition-transform ${
                     userMenuOpen ? "rotate-180" : ""
                   }`}
                 />
+
               </button>
+
 
               {/* User Dropdown Menu */}
               {userMenuOpen && (

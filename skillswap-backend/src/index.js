@@ -83,7 +83,7 @@ app.post("/login", async (req, res) => {
       success: true,
       message: "Login successful",
       token,
-      user: { id: user.id, email: user.email, username: user.username },
+      user: { id: user.id, email: user.email, username: user.username , credits: user.credits ?? 50, },
     });
   } catch (err) {
     console.error("Login error: ", err);

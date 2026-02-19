@@ -6,6 +6,7 @@ interface User {
   id?: number;
   name?: string;
   email?: string;
+  credits?: number;
 }
 //basically a object tara with specification
 interface AuthContextType {

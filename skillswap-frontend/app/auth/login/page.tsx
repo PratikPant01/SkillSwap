@@ -31,11 +31,13 @@ export default function LoginPage() {
       console.log("Server Response: ", data);
 
       if (res.ok) {
+        console.log(data.user); 
         login(
           {
             id: data.user.id,
             name: data.user.username,
             email: data.user.email,
+            credits: data.user.credits
           },
           data.token,
         );

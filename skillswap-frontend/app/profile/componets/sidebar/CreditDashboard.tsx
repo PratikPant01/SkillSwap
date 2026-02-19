@@ -21,7 +21,7 @@ export default function CreditDashboard({ profile }: { profile: any }) {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5000/credits/history", {
+        const res = await fetch("https://skillswapservice.up.railway.app/credits/history", {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();

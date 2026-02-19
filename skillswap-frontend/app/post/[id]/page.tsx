@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, RefreshCw, MapPin } from "lucide-react";
+import { Clock, RefreshCw, MapPin, Coins } from "lucide-react";
 import MessageChatBox from "@/component/messagechatbox";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
@@ -188,7 +188,7 @@ export default function PostPage() {
               {isFree ? (
                 <p className="text-green-400 font-black text-4xl drop-shadow-sm tracking-tight">FREE</p>
               ) : (
-                <p className="text-white font-bold text-3xl">Rs {singleService.price}</p>
+                <p className="text-white font-bold text-3xl"><Coins className="inline mr-1 text-yellow-500" size={20} /> {singleService.price}</p>
               )}
             </div>
             <button

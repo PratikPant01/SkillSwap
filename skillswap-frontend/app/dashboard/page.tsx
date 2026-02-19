@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { MessageCircle, Search, Clock, TrendingUp, Eye, Heart, Share2, Users, ArrowRight, Star, Zap } from 'lucide-react';
 import MessageChatBox from '@/component/messagechatbox';
+import SellerProposalsPanel from "@/component/SellerProposalsPanel";
+import OrdersPanel from "@/component/OrdersPanel";
 
 interface Conversation {
   id: number;
@@ -200,6 +202,11 @@ export default function DashboardPage() {
                 </span>
               </div>
             ))}
+          </div>
+
+          <div className="mt-4 space-y-4">
+            <SellerProposalsPanel token={token} onOrderCreated={() => {/* optionally refresh orders */}} />
+            <OrdersPanel token={token} currentUserId={currentUserId} />
           </div>
         </div>
       </div>

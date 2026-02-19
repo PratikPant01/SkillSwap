@@ -1,4 +1,5 @@
 "use client";
+import {Coins} from "lucide-react";
 import Link from 'next/link';
 import ServiceCard from "../../component/serviceCard";
 import { Search, Funnel } from "lucide-react";
@@ -62,9 +63,9 @@ export default function BrowseServicesPage() {
   const priceOptions = [
     { id: 'All', label: 'All' },
     { id: 'free', label: 'Free' },
-    { id: 'low', label: 'Under रु 100' },
-    { id: 'mid', label: 'रु 100 - रु 500' },
-    { id: 'high', label: 'Above रु 500' },
+    { id: 'low', label: 'Under 100' },
+    { id: 'mid', label: '100 - 500' },
+    { id: 'high', label: 'Above 500' },
   ];
 
   // --- FILTERING LOGIC ---
@@ -183,7 +184,7 @@ export default function BrowseServicesPage() {
 
                 {/* Price Range Filter */}
                 <div className='flex flex-col gap-4'>
-                  <p className='text-lg font-semibold text-gray-800'>Price Range</p>
+                  <p className='text-lg font-semibold text-gray-800'>Price Range <Coins className="inline mr-1 text-yellow-500" size={16} /></p>
                   <div className='grid grid-cols-2 lg:grid-cols-1 gap-3'>
                     {priceOptions.map((pr) => (
                       <div key={pr.id} className='flex items-center gap-x-2'>

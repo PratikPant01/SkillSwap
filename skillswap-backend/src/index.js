@@ -19,7 +19,7 @@ const { Pool } = pkg;
 const app = express();
 
 // CORS for talking with the backend
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: "https://skill-swap-lake.vercel.app" }));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 

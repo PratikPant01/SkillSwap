@@ -8,7 +8,8 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import messageRoutes from "./message.js";
-import commentRoutes from "./comment.js"; 
+import commentRoutes from "./comment.js";
+import { awardCredits } from "./utils/credits.js";
 
 dotenv.config();
 const { Pool } = pkg;
@@ -43,8 +44,17 @@ app.post("/register", async (req, res) => {
       "INSERT INTO users (email, username, password, first_name, last_name, credits) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, email, username, first_name, last_name, credits",
       [email, username, hashedpassword, first_name, last_name, 50]
     );
+
+    const newUser = result.rows[0];
+
+    // Log initial credits to history
+    await pool.query(
+      "INSERT INTO credit_history (user_id, amount, transaction_type, description) VALUES ($1, $2, $3, $4)",
+      [newUser.id, 50, 'BONUS', 'Welcome Bonus']
+    );
+
     // Returns the id, email, username and credits (not password)
-    res.json({ success: true, user: result.rows[0] });
+    res.json({ success: true, user: newUser });
   } catch (err) {
     console.error("Registration error: ", err);
     res.status(500).json({ success: false, message: "Registration failed or User already exists" });
@@ -73,18 +83,33 @@ app.post("/login", async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
+    // Daily Login Bonus Logic
+    const lastLogin = user.last_login_at;
+    const now = new Date();
+    const isNewDay = !lastLogin || new Date(lastLogin).toDateString() !== now.toDateString();
+
+    if (isNewDay) {
+      await awardCredits(pool, user.id, 2, 'BONUS', 'Daily login bonus');
+      await pool.query("UPDATE users SET last_login_at = $1 WHERE id = $2", [now, user.id]);
+    }
+
     // JWT token to store the session info
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+
+    // Fetch updated credits after bonus
+    const updatedUser = isNewDay
+      ? (await pool.query("SELECT credits FROM users WHERE id = $1", [user.id])).rows[0]
+      : user;
+
     res.json({
       success: true,
-      message: "Login successful",
+      message: isNewDay ? "Login successful + 2 Daily Bonus!" : "Login successful",
       token,
-      token,
-      user: { id: user.id, email: user.email, username: user.username, credits: user.credits },
+      user: { id: user.id, email: user.email, username: user.username, credits: updatedUser.credits },
     });
   } catch (err) {
     console.error("Login error: ", err);
@@ -299,10 +324,10 @@ app.post("/posts/:id/complete", authenticateToken, async (req, res) => {
       await client.query("UPDATE posts SET status = 'COMPLETED' WHERE id = $1", [id]);
 
       // Reward credits to assigned user
-      await client.query("UPDATE users SET credits = credits + 20 WHERE id = $1", [post.assigned_to]);
+      await awardCredits(client, post.assigned_to, 50, 'EARNED', `Completed service: ${post.title}`);
 
       await client.query("COMMIT");
-      res.json({ success: true, message: "Post completed and credits awarded" });
+      res.json({ success: true, message: "Post completed and 50 credits awarded!" });
     } catch (e) {
       await client.query("ROLLBACK");
       throw e;
@@ -311,6 +336,21 @@ app.post("/posts/:id/complete", authenticateToken, async (req, res) => {
     }
   } catch (err) {
     console.error("Complete post error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Get credit history
+app.get("/credits/history", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const result = await pool.query(
+      "SELECT id, amount, transaction_type, description, created_at FROM credit_history WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    );
+    res.json({ success: true, history: result.rows });
+  } catch (err) {
+    console.error("Fetch credit history error:", err);
     res.status(500).json({ success: false });
   }
 });

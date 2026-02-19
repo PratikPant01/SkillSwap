@@ -5,6 +5,7 @@ import MessageChatBox from "@/component/messagechatbox";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import ProposalModal from "@/component/proposalmodal";
 
 export default function PostPage() {
   const params = useParams();
@@ -15,6 +16,7 @@ export default function PostPage() {
   const [chatUser, setChatUser] = useState<{ id: number; name: string } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [token, setToken] = useState<string>('');
+  const [showProposalModal, setShowProposalModal] = useState(false);
 
   // Inside PostPage component
   const [comments, setComments] = useState<any[]>([]);
@@ -308,7 +310,10 @@ export default function PostPage() {
             )}
 
             <div className="space-y-3">
-              <button className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition shadow-md active:scale-[0.98]">
+
+              <button 
+                onClick={() => setShowProposalModal(true)}
+                className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition shadow-md active:scale-[0.98]">
                 {isFree ? "Claim Service" : "Order Now"}
               </button>
               <button
@@ -350,6 +355,21 @@ export default function PostPage() {
             token={token}
           />
         </div>
+      )}
+
+      {/* PROPOSAL MODAL */}
+      {showProposalModal && currentUserId && token && singleService && (
+        <ProposalModal
+          postId={singleService.id}
+          postTitle={singleService.title}
+          postType={singleService.post_type}
+          token={token}
+          currentUserId={currentUserId}
+          onClose={() => setShowProposalModal(false)}
+          onSuccess={() => {
+            setShowProposalModal(false);
+          }}
+        />
       )}
     </div>
   );

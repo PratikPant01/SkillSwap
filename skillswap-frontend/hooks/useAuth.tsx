@@ -1,5 +1,4 @@
 "use client";
-
 import { createContext, useContext, useState, useEffect } from "react";
 
 interface User {
@@ -9,7 +8,7 @@ interface User {
   credits?: number;
   profile_picture_url?: string;
 }
-//basically a object tara with specification
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -19,7 +18,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
   loading: boolean;
 }
-//creates a context which do not require to pass the props 
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -35,6 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        setToken(storedToken); 
       } catch (error) {
         console.error("Error parsing stored user:", error);
         localStorage.removeItem("user");
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         token,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && !!token, //  both must exist
         login,
         logout,
         updateUser,

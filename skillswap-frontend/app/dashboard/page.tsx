@@ -261,7 +261,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Bottom Row — optional other sections can remain here */}
+      {/* Bottom Row — Connection Suggestions */}
+      {currentUserId && token && selectedUser && (
+        <MessageChatBox
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          currentUserId={currentUserId}
+          token={token}
+        />
+      )}
 
     </div>
   );

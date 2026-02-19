@@ -57,8 +57,9 @@ export default function RegisterPage() {
             login(
               {
                 id: loginData.user.id,
-                name: loginData.user.username,
+                name: loginData.user.name || loginData.user.username,
                 email: loginData.user.email,
+                profile_picture_url: loginData.user.profile_picture_url,
               },
               loginData.token
             );

@@ -30,6 +30,7 @@ interface Props {
   token: string;
   onEdit?: (message: string) => void;
   isPublic?: boolean;
+  initialSkills?: UserSkill[];
 }
 
 const skillIconMap: Record<string, React.ReactNode> = {
@@ -109,20 +110,26 @@ const skillIconMap: Record<string, React.ReactNode> = {
   "Slack": <SiSlack className="text-purple-500" />,
 };
 
-export default function SkillsTeach({ token, onEdit, isPublic }: Props) {
+export default function SkillsTeach({ token, onEdit, isPublic, initialSkills }: Props) {
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
-  const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
+  const [userSkills, setUserSkills] = useState<UserSkill[]>(initialSkills || []);
   const [isEditing, setIsEditing] = useState(false);
   const [newSkill, setNewSkill] = useState("");
 
   useEffect(() => {
+    if (initialSkills && isPublic) {
+      setUserSkills(initialSkills);
+    }
     if (token || isPublic) fetchSkills();
-  }, [token, isPublic]);
+  }, [token, isPublic, initialSkills]);
 
   const fetchSkills = async () => {
+    // Skip fetching if we already have initialSkills for a public profile
+    if (isPublic && initialSkills && initialSkills.length > 0) return;
+
     try {
       const skills = await getAllSkills();
-      const userSkillsData = await getUserSkills(token);
+      const userSkillsData = token ? await getUserSkills(token) : [];
 
       // Filter out any malformed skills (missing id or name)
       const validSkills = skills.filter(s => s && s.id && s.name);

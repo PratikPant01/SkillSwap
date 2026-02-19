@@ -1,15 +1,34 @@
 /**
  * Award credits to a user and log the transaction.
- * @param {object} pool - DB Pool
+ * @param {object} db - DB Pool or Client
  * @param {number} userId - User ID
  * @param {number} amount - Amount to award
  * @param {string} type - Transaction type (BONUS, EARNED, SPENT)
  * @param {string} description - Transaction description
  */
-export async function awardCredits(pool, userId, amount, type, description) {
-    const client = await pool.connect();
+export async function awardCredits(db, userId, amount, type, description) {
+    // Check if db is a Pool or a Client
+    // Pools have a 'connect' method but also tracking properties like 'totalCount'
+    const isPool = typeof db.connect === 'function' && db.totalCount !== undefined;
+
+    let client;
+    let shouldRelease = false;
+    let shouldHandleTransaction = false;
+
+    if (isPool) {
+        client = await db.connect();
+        shouldRelease = true;
+        shouldHandleTransaction = true;
+    } else {
+        client = db;
+        shouldRelease = false;
+        shouldHandleTransaction = false; // Assume caller handles transaction if passing a client
+    }
+
     try {
-        await client.query("BEGIN");
+        if (shouldHandleTransaction) {
+            await client.query("BEGIN");
+        }
 
         // Update user credits
         await client.query(
@@ -23,13 +42,19 @@ export async function awardCredits(pool, userId, amount, type, description) {
             [userId, amount, type, description]
         );
 
-        await client.query("COMMIT");
+        if (shouldHandleTransaction) {
+            await client.query("COMMIT");
+        }
         return true;
     } catch (err) {
-        await client.query("ROLLBACK");
+        if (shouldHandleTransaction) {
+            await client.query("ROLLBACK");
+        }
         console.error("Error awarding credits:", err);
         return false;
     } finally {
-        client.release();
+        if (shouldRelease) {
+            client.release();
+        }
     }
 }

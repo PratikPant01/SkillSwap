@@ -2,6 +2,7 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ const upload = multer({ storage: storage });
 
 
 // Get current user's profile
-router.get("/me", async (req, res) => {
+router.get("/me", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const pool = req.app.locals.pool;
@@ -105,7 +106,7 @@ router.get("/me", async (req, res) => {
 });
 
 // Update profile
-router.put("/me", async (req, res) => {
+router.put("/me", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const pool = req.app.locals.pool;
@@ -184,7 +185,7 @@ router.get("/:username", async (req, res) => {
         const pool = req.app.locals.pool;
 
         // Find user first
-        const userResult = await pool.query("SELECT id, username, email FROM users WHERE username = $1", [username]);
+        const userResult = await pool.query("SELECT id, username, email, first_name, last_name FROM users WHERE username = $1", [username]);
         if (userResult.rows.length === 0) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -211,20 +212,43 @@ router.get("/:username", async (req, res) => {
 
         // Fetch skills (publicly visible)
         const skillsResult = await pool.query(
-            `SELECT us.type, us.proficiency, s.name, s.icon_url
+            `SELECT us.id as user_skill_id, us.type, us.proficiency, s.name, s.icon_url
              FROM user_skills us
              JOIN skills s ON us.skill_id = s.id
              WHERE us.user_id = $1`,
             [user.id]
         );
 
+        // Fetch portfolio projects
+        const portfolioResult = await pool.query(
+            "SELECT * FROM portfolio_projects WHERE user_id = $1 ORDER BY created_at DESC",
+            [user.id]
+        );
+
+        // Fetch completed services
+        const servicesResult = await pool.query(
+            `SELECT p.*, u.username as owner_username 
+             FROM posts p
+             JOIN users u ON p.user_id = u.id
+             WHERE p.assigned_to = $1 AND p.status = 'COMPLETED'
+             ORDER BY p.created_at DESC`,
+            [user.id]
+        );
+
 
         res.json({
-            user: { username: user.username, email: user.email }, // Be careful exposing email publicly
+            user: {
+                username: user.username,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name
+            }, // Be careful exposing email publicly
             ...profile,
             education: eduResult.rows,
             languages: langResult.rows,
-            skills: skillsResult.rows
+            skills: skillsResult.rows,
+            portfolio: portfolioResult.rows,
+            completed_services: servicesResult.rows
         });
 
     } catch (err) {
@@ -236,7 +260,7 @@ router.get("/:username", async (req, res) => {
 // --- Portfolio Endpoints ---
 
 // Upload portfolio project image
-router.post("/portfolio/upload", upload.single("image"), async (req, res) => {
+router.post("/portfolio/upload", authenticateToken, upload.single("image"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
@@ -253,7 +277,7 @@ router.post("/portfolio/upload", upload.single("image"), async (req, res) => {
 });
 
 // Add portfolio project
-router.post("/portfolio", async (req, res) => {
+router.post("/portfolio", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const pool = req.app.locals.pool;
@@ -273,7 +297,7 @@ router.post("/portfolio", async (req, res) => {
 });
 
 // Update portfolio project
-router.put("/portfolio/:id", async (req, res) => {
+router.put("/portfolio/:id", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const { id } = req.params;
@@ -299,7 +323,7 @@ router.put("/portfolio/:id", async (req, res) => {
 });
 
 // Delete portfolio project
-router.delete("/portfolio/:id", async (req, res) => {
+router.delete("/portfolio/:id", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const { id } = req.params;
@@ -319,7 +343,7 @@ router.delete("/portfolio/:id", async (req, res) => {
 
 // --- Photo Upload ---
 
-router.post("/upload-photo", upload.single("photo"), async (req, res) => {
+router.post("/upload-photo", authenticateToken, upload.single("photo"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });

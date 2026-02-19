@@ -10,6 +10,7 @@ import path from "path";
 import messageRoutes from "./message.js";
 import commentRoutes from "./comment.js";
 import { awardCredits } from "./utils/credits.js";
+import { authenticateToken } from "./middleware/auth.js";
 
 dotenv.config();
 const { Pool } = pkg;
@@ -131,18 +132,7 @@ app.post("/login", async (req, res) => {
 
 // Authentication token middleware for Creating Posts
 
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-
-  if (!token) return res.sendStatus(401);
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user; // attaches user info
-    next();
-  });
-};
+// Authentication token middleware moved to src/middleware/auth.js
 
 // Multer storage configuration
 const storage = multer.diskStorage({
@@ -252,12 +242,14 @@ app.get("/posts", async (req, res) => {
       SELECT 
         posts.*,
         users.username,
+        profiles.profile_picture_url,
         COALESCE(ROUND(AVG(comments.rating),1),0)::float AS average_rating,
         COUNT(comments.id)::int AS total_comments
       FROM posts
       JOIN users ON posts.user_id = users.id
+      LEFT JOIN profiles ON profiles.user_id = users.id
       LEFT JOIN comments ON comments.post_id = posts.id
-      GROUP BY posts.id, users.username
+      GROUP BY posts.id, users.username, profiles.profile_picture_url
       ORDER BY posts.created_at DESC
     `);
 
@@ -274,10 +266,11 @@ app.get("/posts/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT posts.*, users.username 
-       FROM posts 
-       JOIN users ON posts.user_id = users.id 
-       WHERE posts.id = $1`,
+      `SELECT p.*, u.username, pr.profile_picture_url
+       FROM posts p
+       JOIN users u ON p.user_id = u.id
+       LEFT JOIN profiles pr ON u.id = pr.user_id
+       WHERE p.id = $1`,
       [id]
     );
 
@@ -474,7 +467,7 @@ app.delete("/user-skills/:id", authenticateToken, async (req, res) => {
 
 // Profile routes
 import profileRoutes from "./routes/profile.js";
-app.use("/profile", authenticateToken, profileRoutes);
+app.use("/profile", profileRoutes); // Moved auth to specific routes in profile.js
 
 // Message routes (with authentication)
 app.use("/", authenticateToken, messageRoutes);

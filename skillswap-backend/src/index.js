@@ -262,6 +262,31 @@ app.get("/posts", async (req, res) => {
   }
 });
 
+app.get("/posts/mine", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(`
+      SELECT 
+        posts.*,
+        users.username,
+        profiles.profile_picture_url,
+        COALESCE(ROUND(AVG(comments.rating),1),0)::float AS average_rating,
+        COUNT(comments.id)::int AS total_comments
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      LEFT JOIN profiles ON profiles.user_id = users.id
+      LEFT JOIN comments ON comments.post_id = posts.id
+      WHERE posts.user_id = $1
+      GROUP BY posts.id, users.username, profiles.profile_picture_url
+      ORDER BY posts.created_at DESC
+    `, [userId]);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Fetch user posts error:", err.stack); // <-- print full stack
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Get a single post by ID
 app.get("/posts/:id", async (req, res) => {
@@ -465,6 +490,7 @@ app.delete("/user-skills/:id", authenticateToken, async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
 
 
 // Profile routes

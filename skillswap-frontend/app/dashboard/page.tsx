@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { MessageCircle, Search, Clock, TrendingUp, Eye, Heart, Share2, Users, ArrowRight, Star, Zap } from 'lucide-react';
+import { MessageCircle, Search, Clock, Eye, Heart, Share2, TrendingUp, ArrowRight } from 'lucide-react';
 import MessageChatBox from '@/component/messagechatbox';
 import SellerProposalsPanel from "@/component/SellerProposalsPanel";
 import OrdersPanel from "@/component/OrdersPanel";
+import ServiceCard from '@/component/serviceCard';
 
 interface Conversation {
   id: number;
@@ -17,12 +18,6 @@ interface Conversation {
   updated_at: string;
 }
 
-const mockInsights = [
-  { id: 1, title: "React Development Tutoring", views: 342, likes: 28, shares: 12, trend: "+18%" },
-  { id: 2, title: "UI/UX Design Consultation", views: 189, likes: 15, shares: 7, trend: "+5%" },
-  { id: 3, title: "Python for Beginners", views: 521, likes: 44, shares: 23, trend: "+32%" },
-];
-
 export default function DashboardPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +25,11 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [token, setToken] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // --- NEW: user posts state ---
+  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState<boolean>(true);
+  const [postsError, setPostsError] = useState<string | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -41,6 +41,7 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Conversations fetch (unchanged)
   useEffect(() => {
     if (!token) { setLoading(false); return; }
     const fetchConversations = async () => {
@@ -49,7 +50,7 @@ export default function DashboardPage() {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        if (data.success) setConversations(data.conversations);
+        if (data.success) setConversations(data.conversations || []);
       } catch (err) {
         console.error('Error fetching conversations:', err);
       } finally {
@@ -59,6 +60,37 @@ export default function DashboardPage() {
     fetchConversations();
     const interval = setInterval(fetchConversations, 5000);
     return () => clearInterval(interval);
+  }, [token]);
+
+  // --- NEW: fetch user's posts from /posts/mine
+  useEffect(() => {
+    if (!token) { setLoadingPosts(false); return; }
+
+    const fetchUserPosts = async () => {
+      setLoadingPosts(true);
+      setPostsError(null);
+      try {
+        const res = await fetch('http://localhost:5000/posts/mine', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status} - ${text}`);
+        }
+        const data = await res.json();
+        // data should be an array of posts
+        setUserPosts(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error fetching user posts:', err);
+        setPostsError('Failed to load your posts');
+        setUserPosts([]);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    fetchUserPosts();
+    // optionally you could poll / refresh on certain actions; not polling here
   }, [token]);
 
   const filteredConversations = conversations.filter(conv =>
@@ -88,11 +120,10 @@ export default function DashboardPage() {
         <p className="text-sm text-gray-500 mt-1">Welcome back — here's what's happening</p>
       </div>
 
-      
-      {/* Top Row: Messages + Insights */}
+      {/* Top Row: Messages + Your Posts */}
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 items-start">
 
-        {/* LEFT — Messages */}
+        {/* LEFT — Messages (unchanged) */}
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
 
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -169,43 +200,61 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* RIGHT — Post Insights */}
+        {/* RIGHT — Your Posts (replaced Post Insights) */}
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2 text-sm font-semibold text-gray-800">
               <TrendingUp size={15} className="text-blue-500" />
-              Post Insights
+              Your Posts
             </div>
-            <button className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors">
-              View all <ArrowRight size={12} />
+            <button
+              onClick={() => {
+                // optional: navigate to a full manage posts page if exists
+                // e.g. router.push('/dashboard/posts') - keep no-op if not implemented
+              }}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-500 transition-colors"
+            >
+              Manage <ArrowRight size={12} />
             </button>
           </div>
 
-          <div className="p-4 space-y-3">
-            {mockInsights.map((post, i) => (
-              <div
-                key={post.id}
-                className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 hover:translate-x-1 transition-all cursor-pointer"
-              >
-                <span className="text-3xl font-bold text-gray-200 w-8 text-center flex-shrink-0">
-                  0{i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 mb-2 truncate">{post.title}</p>
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center gap-1 text-xs text-gray-400"><Eye size={12} />{post.views} views</span>
-                    <span className="flex items-center gap-1 text-xs text-gray-400"><Heart size={12} />{post.likes}</span>
-                    <span className="flex items-center gap-1 text-xs text-gray-400"><Share2 size={12} />{post.shares}</span>
-                  </div>
-                </div>
-                <span className="bg-green-50 text-green-600 border border-green-200 text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0">
-                  {post.trend}
-                </span>
+          <div className="p-4">
+            {loadingPosts ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-7 h-7 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
               </div>
-            ))}
+            ) : postsError ? (
+              <div className="text-center py-10">
+                <p className="text-sm text-red-500">{postsError}</p>
+              </div>
+            ) : userPosts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                <TrendingUp size={40} className="text-gray-200 mb-3" />
+                <p className="text-sm text-gray-400">You haven't created any posts yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 max-h-[420px] overflow-y-auto pr-2">
+                {userPosts.map((post) => (
+                  <ServiceCard
+                    key={post.id}
+                    service={{
+                      id: post.id,
+                      title: post.title,
+                      seller: post.username,
+                      post_type: post.post_type,
+                      rating: post.average_rating,
+                      reviews: post.total_comments,
+                      price: post.price,
+                      image: post.images?.[0] ? `http://localhost:5000/${post.images[0]}` : null,
+                      seller_profile_picture: post.profile_picture_url
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 space-y-4 px-4 pb-4">
             <SellerProposalsPanel token={token} onOrderCreated={() => {/* optionally refresh orders */}} />
             <OrdersPanel token={token} currentUserId={currentUserId} />
           </div>
@@ -222,9 +271,6 @@ export default function DashboardPage() {
         />
       )}
 
-        
-      </div>
-
-  
+    </div>
   );
 }

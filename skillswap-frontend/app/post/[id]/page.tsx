@@ -306,7 +306,7 @@ export default function PostPage() {
             {isFree ? (
               <p className="text-3xl font-black text-green-600 mb-4">FREE</p>
             ) : (
-              <p className="text-3xl font-bold text-gray-900 mb-4">Rs {singleService.price}</p>
+              <p className="text-3xl font-bold text-gray-900 mb-4"><Coins className="inline mr-1 text-yellow-500" size={20} />{singleService.price}</p>
             )}
 
             <div className="space-y-3">

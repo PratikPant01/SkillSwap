@@ -15,7 +15,7 @@ type Proposal = {
 export default function SellerProposalsPanel({ token, onOrderCreated }: { token: string, onOrderCreated?: () => void }) {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
-  const API = "http://localhost:5000";
+  const API = "https://skillswapservice.up.railway.app";
 
   const fetchProposals = async () => {
     if (!token) return;

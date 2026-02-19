@@ -96,6 +96,3 @@ Thumbs.db
 .env.test.local
 .env.production.local
 
-
-# user uploaded files
-skillswap-backend/uploads/

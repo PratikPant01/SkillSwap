@@ -185,8 +185,11 @@ app.post(
       try {
         await client.query("BEGIN");
 
-        // Deduct credits
-        await client.query("UPDATE users SET credits = credits - 10 WHERE id = $1", [userId]);
+        // 1. Deduct cost for posting
+        await awardCredits(client, userId, -10, 'SPENT', 'Service posting fee');
+
+        // 2. Award bonus for sharing a skill
+        await awardCredits(client, userId, 5, 'BONUS', 'Sharing a skill bonus');
 
         const result = await client.query(
           `INSERT INTO posts 
@@ -210,7 +213,11 @@ app.post(
         );
 
         await client.query("COMMIT");
-        res.json({ success: true, post: result.rows[0] });
+        res.json({
+          success: true,
+          message: "Post created! -10 credits fee +5 bonus earned.",
+          post: result.rows[0]
+        });
       } catch (e) {
         await client.query("ROLLBACK");
         throw e;

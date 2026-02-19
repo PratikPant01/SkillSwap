@@ -23,15 +23,11 @@ async function check() {
 
         const historyRes = await pool.query("SELECT * FROM credit_history WHERE user_id = $1 ORDER BY created_at DESC", [user.id]);
         console.log("\n--- Credit History ---");
-        console.log(JSON.stringify(historyRes.rows, null, 2));
+        historyRes.rows.forEach(r => console.log(`${r.created_at.toISOString()} | ${r.amount} | ${r.transaction_type} | ${r.description}`));
 
-        const postsRes = await pool.query("SELECT id, title, status, assigned_to, created_at FROM posts WHERE user_id = $1", [user.id]);
+        const postsRes = await pool.query("SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC", [user.id]);
         console.log("\n--- User Posts ---");
-        console.log(JSON.stringify(postsRes.rows, null, 2));
-
-        const assignedPostsRes = await pool.query("SELECT id, title, status, user_id, created_at FROM posts WHERE assigned_to = $1", [user.id]);
-        console.log("\n--- Posts Assigned to User ---");
-        console.log(JSON.stringify(assignedPostsRes.rows, null, 2));
+        postsRes.rows.forEach(r => console.log(`${r.created_at.toISOString()} | ${r.id} | ${r.title} | ${r.status}`));
 
         const commentsRes = await pool.query("SELECT c.rating, c.content, p.title FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.user_id = $1", [user.id]);
         console.log("\n--- Ratings Received ---");

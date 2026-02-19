@@ -49,6 +49,7 @@ router.get("/me", async (req, res) => {
                 username: user.username,
                 email: user.email,
                 first_name: user.first_name,
+                first_name: user.first_name,
                 last_name: user.last_name,
                 credits: user.credits,
                 created_at: user.created_at,

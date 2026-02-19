@@ -21,7 +21,7 @@ export default function OrdersPanel({ token, currentUserId }: { token: string, c
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [deliverModalFor, setDeliverModalFor] = useState<Order | null>(null);
-  const API = "https://skillswapservice.up.railway.app/";
+  const API = "https://skillswapservice.up.railway.app";
 
   const fetchOrders = async () => {
     if (!token) return;

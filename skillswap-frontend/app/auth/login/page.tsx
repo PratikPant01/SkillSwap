@@ -34,8 +34,9 @@ export default function LoginPage() {
         login(
           {
             id: data.user.id,
-            name: data.user.username,
+            name: data.user.name || data.user.username,
             email: data.user.email,
+            profile_picture_url: data.user.profile_picture_url,
           },
           data.token,
         );

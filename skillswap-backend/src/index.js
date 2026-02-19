@@ -9,6 +9,8 @@ import multer from "multer";
 import path from "path";
 import messageRoutes from "./message.js";
 import commentRoutes from "./comment.js";
+import proposalsRouter from "./routes/proposals.js";
+import ordersRouter from "./routes/orders.js";
 import { awardCredits } from "./utils/credits.js";
 import { authenticateToken } from "./middleware/auth.js";
 
@@ -474,6 +476,9 @@ app.use("/", authenticateToken, messageRoutes);
 
 // Comment routes
 app.use("/comments", authenticateToken, commentRoutes);
+
+app.use("/proposals", authenticateToken, proposalsRouter);
+app.use("/orders", authenticateToken, ordersRouter);
 
 
 // Start server

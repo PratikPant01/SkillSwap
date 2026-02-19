@@ -1,5 +1,5 @@
-"use client";
-import { useState, useRef } from "react";
+// use client
+import React, { useState, useRef } from "react";
 import { X, Upload, FileText, Send, Loader2 } from "lucide-react";
 
 interface ProposalModalProps {
@@ -15,16 +15,14 @@ interface ProposalModalProps {
 export default function ProposalModal({
   postId,
   postTitle,
-  postType,
   token,
-  currentUserId,
   onClose,
   onSuccess,
 }: ProposalModalProps) {
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,9 +41,13 @@ export default function ProposalModal({
   };
 
   const handleSubmit = async () => {
-    setError("");
+    setError(null);
     if (!description.trim()) {
       setError("Please write a description.");
+      return;
+    }
+    if (!token) {
+      setError("You must be logged in to submit a proposal.");
       return;
     }
 
@@ -53,22 +55,29 @@ export default function ProposalModal({
     try {
       const formData = new FormData();
       formData.append("cover_letter", description);
-      files.forEach((file) => formData.append("files", file));
+      files.forEach((file) => formData.append("files", file)); // backend expects files[]
 
       const res = await fetch(`http://localhost:5000/proposals/${postId}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // NOTE: do NOT set 'Content-Type' — browser will set the multipart boundary
+        },
         body: formData,
       });
 
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setSuccess(true);
-        setTimeout(() => { onSuccess?.(); onClose(); }, 1800);
+        setTimeout(() => {
+          onSuccess?.();
+          onClose();
+        }, 900);
       } else {
         setError(data.message || "Submission failed. Please try again.");
       }
-    } catch {
+    } catch (err) {
+      console.error("Proposal submit error:", err);
       setError("Network error. Please check your connection.");
     } finally {
       setSubmitting(false);
@@ -78,7 +87,6 @@ export default function ProposalModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Submit Proposal</h2>
@@ -99,7 +107,6 @@ export default function ProposalModal({
           </div>
         ) : (
           <div className="p-5 space-y-4">
-            {/* Description */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Description <span className="text-red-500">*</span>
@@ -115,7 +122,6 @@ export default function ProposalModal({
               <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/1000</p>
             </div>
 
-            {/* File Upload */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                 Attachments <span className="text-gray-400 font-normal">(optional)</span>
@@ -161,7 +167,6 @@ export default function ProposalModal({
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-3 pt-1">
               <button
                 onClick={onClose}

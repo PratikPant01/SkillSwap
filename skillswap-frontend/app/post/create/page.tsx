@@ -1,9 +1,8 @@
 'use client';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { CheckCircle, ImageIcon, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function CreatePostPage() {
     const [postType, setPostType] = useState("paid");
@@ -13,6 +12,7 @@ export default function CreatePostPage() {
     const [images, setImages] = useState<File[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const { token, isAuthenticated, loading } = useAuth();
+    const hasRedirected = useRef(false);
 
     const router = useRouter();
 
@@ -27,15 +27,19 @@ export default function CreatePostPage() {
     });
 
     useEffect(() => {
-        console.log("Auth State:", { loading, isAuthenticated, token: token ? "EXISTS" : "NULL" });
-        if (!loading) {
-            if (!isAuthenticated || !token) {
-                console.log("User not authenticated, redirecting to login.");
-                router.push("/auth/login");
-            }
+        // Don't do anything while still loading
+        if (loading) return;
+
+        // Prevent double redirects
+        if (hasRedirected.current) return;
+
+        if (!isAuthenticated || !token) {
+            hasRedirected.current = true;
+            router.push("/auth/login");
         }
     }, [loading, isAuthenticated, token, router]);
 
+    // Show loading spinner while auth is resolving
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-200 flex items-center justify-center">
@@ -47,10 +51,12 @@ export default function CreatePostPage() {
         );
     }
 
+    // Show redirecting state only after loading is done and user is not auth'd
     if (!isAuthenticated || !token) {
         return (
             <div className="min-h-screen bg-gray-200 flex items-center justify-center">
                 <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-gray-600">Redirecting to login...</p>
                 </div>
             </div>
@@ -66,7 +72,7 @@ export default function CreatePostPage() {
         const files = e.target.files;
         if (!files) return;
 
-        const newFiles = Array.from(files).slice(0, 4);
+        const newFiles = Array.from(files).slice(0, 4 - images.length);
         const newPreviews = newFiles.map(file => URL.createObjectURL(file));
 
         setImages(prev => [...prev, ...newFiles].slice(0, 4));
@@ -93,7 +99,6 @@ export default function CreatePostPage() {
         e.preventDefault();
 
         if (!isAuthenticated || !token) {
-            alert("Please login to create a post");
             router.push("/auth/login");
             return;
         }
@@ -105,9 +110,9 @@ export default function CreatePostPage() {
         form.append("category", formData.category);
         form.append("description", formData.description);
         form.append("post_type", postType);
-        form.append("price", formData.price ? formData.price : "");
+        form.append("price", formData.price ?? "");
         form.append("deliveryTime", formData.deliveryTime);
-        form.append("revisions", formData.revisions ? formData.revisions : "");
+        form.append("revisions", formData.revisions ?? "");
         form.append("location", formData.location);
 
         tags.forEach(tag => form.append("tags[]", tag));
@@ -123,10 +128,9 @@ export default function CreatePostPage() {
             });
 
             const data = await res.json();
-            console.log(data);
 
             if (data.success) {
-                router.push(`/post/${data.post.id}`); // 
+                router.push(`/post/${data.post.id}`);
             } else {
                 alert(data.message || "Failed to create post. Please try again.");
             }
@@ -137,8 +141,6 @@ export default function CreatePostPage() {
             setSubmitting(false);
         }
     };
-
-
 
     return (
         <div className="min-h-screen bg-gray-200">
@@ -155,20 +157,19 @@ export default function CreatePostPage() {
 
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <form className="space-y-6" onSubmit={handleSubmit}>
+
                     {/* POST TYPE SELECTION */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-6">Post Type</h2>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                            {/* Paid Skillpoint Service */}
                             <button
                                 type="button"
                                 onClick={() => setPostType("paid")}
-                                className={`p-5 rounded-xl border-2 transition-all text-left ${postType === "paid"
+                                className={`p-5 rounded-xl border-2 transition-all text-left ${
+                                    postType === "paid"
                                         ? "border-blue-600 bg-blue-50"
                                         : "border-gray-200 hover:border-gray-300"
-                                    }`}
+                                }`}
                             >
                                 <h3 className="font-semibold text-gray-900 mb-1">
                                     Paid Skillpoint Service
@@ -178,14 +179,14 @@ export default function CreatePostPage() {
                                 </p>
                             </button>
 
-                            {/* Free Service */}
                             <button
                                 type="button"
                                 onClick={() => setPostType("free")}
-                                className={`p-5 rounded-xl border-2 transition-all text-left ${postType === "free"
+                                className={`p-5 rounded-xl border-2 transition-all text-left ${
+                                    postType === "free"
                                         ? "border-green-600 bg-green-50"
                                         : "border-gray-200 hover:border-gray-300"
-                                    }`}
+                                }`}
                             >
                                 <h3 className="font-semibold text-gray-900 mb-1">
                                     Free / Portfolio
@@ -194,16 +195,25 @@ export default function CreatePostPage() {
                                     Provide free work to build your portfolio, gain experience, or earn skill points to get started.
                                 </p>
                             </button>
-
                         </div>
                     </div>
 
+                    {/* BASIC INFO */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-6">Basic Service Information</h2>
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-900 mb-2">Service Title<span className="text-red-600">*</span></label>
-                                <input className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="I will make a modern website UI..." name="title" value={formData.title} onChange={handleChange} required />
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Service Title <span className="text-red-600">*</span>
+                                </label>
+                                <input
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="I will make a modern website UI..."
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                    required
+                                />
                             </div>
 
                             <div>
@@ -211,7 +221,10 @@ export default function CreatePostPage() {
                                     Category <span className="text-red-500">*</span>
                                 </label>
                                 <select
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" name="category" value={formData.category} onChange={handleChange}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    name="category"
+                                    value={formData.category}
+                                    onChange={handleChange}
                                     required
                                 >
                                     <option value="">Select a category</option>
@@ -225,7 +238,6 @@ export default function CreatePostPage() {
                                 </select>
                             </div>
 
-                            {/* Price - Only show for paid posts */}
                             {postType === "paid" && (
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -236,33 +248,34 @@ export default function CreatePostPage() {
                                         placeholder="1500"
                                         min="0"
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        name="price" value={formData.price} onChange={handleChange}
+                                        name="price"
+                                        value={formData.price}
+                                        onChange={handleChange}
                                         required
                                     />
                                 </div>
-
                             )}
 
                             {postType === "free" && (
                                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-                                    <CheckCircle className="w-6 h-6 text-green-600 mb-2" />
-                                    <p className="text-green-700">You have selected to create a free service post.<br /> This is a great way to build your portfolio and gain experience. You can always upgrade to a paid post later!</p>
+                                    <CheckCircle className="w-6 h-6 text-green-600 shrink-0" />
+                                    <p className="text-green-700">
+                                        You have selected to create a free service post.<br />
+                                        This is a great way to build your portfolio and gain experience. You can always upgrade to a paid post later!
+                                    </p>
                                 </div>
                             )}
 
-                            {/* Image Upload Wala Part */}
+                            {/* Image Upload */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                                     Service Images <span className="text-red-500">*</span>
                                 </label>
-
                                 <p className="text-sm text-gray-500 mb-3">
                                     Upload up to 4 images. First image is required and will be used as main preview.
                                 </p>
 
-                                {/* Styled Upload Box */}
                                 <label className="cursor-pointer">
-
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -271,19 +284,13 @@ export default function CreatePostPage() {
                                         className="hidden"
                                         required={images.length === 0}
                                     />
-
                                     <div className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-gray-500 hover:border-blue-500 hover:bg-blue-50 transition">
                                         <ImageIcon size={28} />
-                                        <span className="mt-2 font-medium">
-                                            Click to upload images
-                                        </span>
-                                        <span className="text-xs text-gray-400 mt-1">
-                                            Max 4 images • JPG, PNG supported
-                                        </span>
+                                        <span className="mt-2 font-medium">Click to upload images</span>
+                                        <span className="text-xs text-gray-400 mt-1">Max 4 images • JPG, PNG supported</span>
                                     </div>
                                 </label>
 
-                                {/* Image Preview Grid */}
                                 <div className="flex flex-wrap gap-3 mt-4">
                                     {imagePreviews.length > 0 ? (
                                         imagePreviews.map((previewUrl, index) => (
@@ -293,8 +300,6 @@ export default function CreatePostPage() {
                                                     alt={`preview-${index}`}
                                                     className="w-48 h-32 object-cover rounded-lg border border-gray-200"
                                                 />
-
-                                                {/* Remove Button */}
                                                 <button
                                                     type="button"
                                                     onClick={() => removeImage(index)}
@@ -302,8 +307,6 @@ export default function CreatePostPage() {
                                                 >
                                                     <X size={14} />
                                                 </button>
-
-                                                {/* Main Image Label */}
                                                 {index === 0 && (
                                                     <span className="absolute bottom-1 left-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
                                                         Main
@@ -312,23 +315,19 @@ export default function CreatePostPage() {
                                             </div>
                                         ))
                                     ) : (
-                                        // Placeholder when no images uploaded
                                         <div className="w-48 h-32 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-400">
                                             <ImageIcon size={24} />
                                             <span className="text-xs mt-1">Preview</span>
                                         </div>
                                     )}
                                 </div>
-
                             </div>
-
                         </div>
                     </div>
 
-                    {/* Service Description*/}
+                    {/* DESCRIPTION */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-6">Service Description</h2>
-
                         <div>
                             <label className="block text-sm font-semibold text-gray-900 mb-2">
                                 Description <span className="text-red-500">*</span>
@@ -337,7 +336,9 @@ export default function CreatePostPage() {
                                 placeholder="Describe your service in detail..."
                                 rows={8}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                name="description" value={formData.description} onChange={handleChange}
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
                                 required
                             />
                             <p className="text-sm text-gray-500 mt-2">
@@ -349,16 +350,16 @@ export default function CreatePostPage() {
                     {/* DELIVERY DETAILS */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-6">Delivery Details</h2>
-
                         <div className="space-y-5">
-                            {/* Delivery Time */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                                     Delivery Time <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    name="deliveryTime" value={formData.deliveryTime} onChange={handleChange}
+                                    name="deliveryTime"
+                                    value={formData.deliveryTime}
+                                    onChange={handleChange}
                                     required
                                 >
                                     <option value="">Select delivery time</option>
@@ -369,7 +370,6 @@ export default function CreatePostPage() {
                                 </select>
                             </div>
 
-                            {/* Revisions Allowed */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                                     Revisions Allowed <span className="text-red-500">*</span>
@@ -379,12 +379,13 @@ export default function CreatePostPage() {
                                     placeholder="5"
                                     min="0"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    name="revisions" value={formData.revisions} onChange={handleChange}
+                                    name="revisions"
+                                    value={formData.revisions}
+                                    onChange={handleChange}
                                     required
                                 />
                             </div>
 
-                            {/* Location */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                                     Location <span className="text-red-500">*</span>
@@ -393,24 +394,25 @@ export default function CreatePostPage() {
                                     type="text"
                                     placeholder="Kathmandu, Nepal"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    name="location" value={formData.location} onChange={handleChange}
+                                    name="location"
+                                    value={formData.location}
+                                    onChange={handleChange}
                                     required
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* SECTION 4 - TAGS */}
+                    {/* TAGS */}
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Optional Details</h2>
 
-                        {/* Tags Input */}
                         <div className="flex gap-2 mb-3">
                             <input
                                 type="text"
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
-                                onKeyPress={(e) => {
+                                onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         e.preventDefault();
                                         addTag();
@@ -429,7 +431,6 @@ export default function CreatePostPage() {
                             </button>
                         </div>
 
-                        {/* Tags Display */}
                         {tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {tags.map((tag, idx) => (
@@ -443,7 +444,7 @@ export default function CreatePostPage() {
                                             onClick={() => removeTag(tag)}
                                             className="hover:text-blue-900 transition"
                                         >
-                                            <X size={14} className="hover:text-blue-300" />
+                                            <X size={14} />
                                         </button>
                                     </span>
                                 ))}
@@ -451,29 +452,35 @@ export default function CreatePostPage() {
                         )}
                     </div>
 
-                {/* ACTION BUTTONS */}
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                    <button
+                    {/* ACTION BUTTONS */}
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <button
                                 type="button"
-                                onClick={() => router.push("/browse")} // 
+                                onClick={() => router.push("/browse")}
                                 className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
                             >
                                 Cancel
                             </button>
-                    <button
-                        type="submit"
-                        className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md"
-                    >
-                        Publish Service
-                    </button>
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {submitting ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                        Publishing...
+                                    </span>
+                                ) : (
+                                    "Publish Service"
+                                )}
+                            </button>
+                        </div>
                     </div>
-                </div>
-                            
-            </form>
+
+                </form>
+            </div>
         </div>
-    </div>
-
-
     );
 }

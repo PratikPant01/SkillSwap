@@ -1,31 +1,31 @@
-import type { Metadata } from "next";
-import "./globals.css";
+  import type { Metadata } from "next";
+  import "./globals.css";
 
-import "@fortawesome/fontawesome-svg-core/styles.css";
-import { config } from "@fortawesome/fontawesome-svg-core";
+  import "@fortawesome/fontawesome-svg-core/styles.css";
+  import { config } from "@fortawesome/fontawesome-svg-core";
 
-config.autoAddCss = false;
+  config.autoAddCss = false;
 
-import Navbar from "../component/navbar";
-import Footer from "../component/footer";
-import { AuthProvider } from "@/hooks/useAuth";
+  import Navbar from "../component/navbar";
+  import Footer from "../component/footer";
+  import { AuthProvider } from "@/hooks/useAuth";
+  import HowItWorks from "@/component/howitworks";
+  export const metadata: Metadata = {
+    title: "SkillSwap",
+    description: "Exchange skills, learn together.",
+  };
 
-export const metadata: Metadata = {
-  title: "SkillSwap",
-  description: "Exchange skills, learn together.",
-};
-
-export default function RootLayout(
-  {children,}: {children: React.ReactNode;}) {
-  return (
-    <html lang="en">
-      <body>
-        <AuthProvider>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
-        </AuthProvider>
-      </body>
-    </html>
-  );
-}
+  export default function RootLayout(
+    {children,}: {children: React.ReactNode;}) {
+    return (
+      <html lang="en">
+        <body>
+          <AuthProvider>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+          </AuthProvider>
+        </body>
+      </html>
+    );
+  }

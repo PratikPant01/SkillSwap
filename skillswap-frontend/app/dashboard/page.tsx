@@ -88,6 +88,7 @@ export default function DashboardPage() {
         <p className="text-sm text-gray-500 mt-1">Welcome back — here's what's happening</p>
       </div>
 
+      
       {/* Top Row: Messages + Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 items-start">
 
@@ -212,7 +213,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row — Connection Suggestions */}
-     
+      {currentUserId && token && selectedUser && (
+        <MessageChatBox
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          currentUserId={currentUserId}
+          token={token}
+        />
+      )}
 
         
       </div>

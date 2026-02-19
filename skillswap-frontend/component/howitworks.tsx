@@ -4,7 +4,7 @@ import { Search,  MessageCircle, Star } from 'lucide-react';
 
 export default function HowItWorks() {
   return (
-   <div className="bg-white py-16 mt-12">
+   <div id="how-it-works" className="bg-white py-16 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">How SkillSwap Works</h2>
           <div className="grid md:grid-cols-3 gap-8">

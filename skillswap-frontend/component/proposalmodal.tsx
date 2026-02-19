@@ -57,7 +57,7 @@ export default function ProposalModal({
       formData.append("cover_letter", description);
       files.forEach((file) => formData.append("files", file)); // backend expects files[]
 
-      const res = await fetch(`http://localhost:5000/proposals/${postId}`, {
+      const res = await fetch(`https://skillswapservice.up.railway.app/proposals/${postId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

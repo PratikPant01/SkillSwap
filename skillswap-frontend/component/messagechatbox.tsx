@@ -27,7 +27,7 @@ const MessageChatBox = ({ user, onClose, currentUserId, token }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollingInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const API_URL = 'http://localhost:5000';
+  const API_URL = 'https://skillswapservice.up.railway.app';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

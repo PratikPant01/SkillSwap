@@ -13,7 +13,7 @@ export default function FeaturedService() {
   useEffect(() => {
     const fetchPopularServices = async () => {
       try {
-        const res = await fetch("http://localhost:5000/posts");
+        const res = await fetch("https://skillswapservice.up.railway.app/posts");
         if (!res.ok) throw new Error("Failed to fetch posts");
         
         const data = await res.json();
@@ -94,7 +94,7 @@ export default function FeaturedService() {
                 rating: service.average_rating,
                 reviews: service.total_comments,
                 price: service.price,
-                image: service.images?.[0] ? `http://localhost:5000/${service.images[0]}` : null
+                image: service.images?.[0] ? `https://skillswapservice.up.railway.app/${service.images[0]}` : null
               }}
             />
           ))}

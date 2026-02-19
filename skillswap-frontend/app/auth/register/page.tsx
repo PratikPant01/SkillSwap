@@ -28,7 +28,7 @@ export default function RegisterPage() {
 
     try {
       // Step 1: Register the user
-      const registerRes = await fetch("http://localhost:5000/register", {
+      const registerRes = await fetch("https://skillswapservice.up.railway.app/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export default function RegisterPage() {
       if (registerRes.ok) {
         // Step 2: Auto-login after successful registration
         try {
-          const loginRes = await fetch("http://localhost:5000/login", {
+          const loginRes = await fetch("https://skillswapservice.up.railway.app/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

@@ -17,7 +17,7 @@ export default function DeliverModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
-  const API = "http://localhost:5000";
+  const API = "https://skillswapservice.up.railway.app";
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);

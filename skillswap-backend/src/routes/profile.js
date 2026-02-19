@@ -267,7 +267,7 @@ router.post("/portfolio/upload", authenticateToken, upload.single("image"), asyn
         }
 
         const filePath = req.file.path.replace(/\\/g, "/"); // Normalize path for web
-        const imageUrl = `http://localhost:5000/${filePath}`;
+        const imageUrl = `https://skillswapservice.up.railway.app/${filePath}`;
 
         res.json({ success: true, imageUrl });
     } catch (err) {
@@ -352,7 +352,7 @@ router.post("/upload-photo", authenticateToken, upload.single("photo"), async (r
         const userId = req.user.id;
         const pool = req.app.locals.pool;
         const filePath = req.file.path.replace(/\\/g, "/"); // Normalize path for web
-        const photoUrl = `http://localhost:5000/${filePath}`;
+        const photoUrl = `https://skillswapservice.up.railway.app/${filePath}`;
 
         // Update profile with new photo URL
         await pool.query(

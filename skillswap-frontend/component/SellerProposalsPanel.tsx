@@ -94,7 +94,7 @@ export default function SellerProposalsPanel({ token, onOrderCreated }: { token:
                   {p.files && p.files.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {p.files.map((f, i) => (
-                        <a key={i} href={`http://localhost:5000/${f}`} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">
+                        <a key={i} href={`https://skillswapservice.up.railway.app/${f}`} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">
                           Attachment {i+1}
                         </a>
                       ))}

@@ -83,6 +83,10 @@ app.post("/login", async (req, res) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
+    // Fetch profile picture if exists
+    const profileResult = await pool.query("SELECT profile_picture_url FROM profiles WHERE user_id = $1", [user.id]);
+    const profilePictureUrl = profileResult.rows[0]?.profile_picture_url || null;
+
     // Daily Login Bonus Logic
     const lastLogin = user.last_login_at;
     const now = new Date();
@@ -109,7 +113,14 @@ app.post("/login", async (req, res) => {
       success: true,
       message: isNewDay ? "Login successful + 2 Daily Bonus!" : "Login successful",
       token,
-      user: { id: user.id, email: user.email, username: user.username, credits: updatedUser.credits },
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,
+        credits: updatedUser.credits,
+        profile_picture_url: profilePictureUrl
+      },
     });
   } catch (err) {
     console.error("Login error: ", err);

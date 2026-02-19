@@ -3,9 +3,10 @@ import EditButton from "../shared/EditButton";
 type Props = {
   onEdit: (section: string) => void;
   stats: any;
+  isPublic?: boolean;
 };
 
-export default function QuickStats({ onEdit, stats: profile }: Props) {
+export default function QuickStats({ onEdit, stats: profile, isPublic }: Props) {
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -28,7 +29,7 @@ export default function QuickStats({ onEdit, stats: profile }: Props) {
     { label: "Portfolio Projects", value: profile?.portfolio?.length ?? 0 },
     { label: "Member Since", value: formatDate(profile?.created_at) },
     { label: "Response Time", value: "~1 hour" },
-    { label: "Availability", value: "Available Now", green: true },
+    ...(!isPublic ? [{ label: "Availability", value: "Available Now", green: true }] : []),
   ];
 
   return (
@@ -42,8 +43,8 @@ export default function QuickStats({ onEdit, stats: profile }: Props) {
           <div key={i} className="flex justify-between py-2 border-b border-slate-50 last:border-0 items-center">
             <span className="text-sm text-slate-500">{s.label}</span>
             <span className={`text-sm font-semibold ${s.blue ? "text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100" :
-                s.green ? "text-green-600 bg-green-50 px-2 py-0.5 rounded-lg border border-green-100" :
-                  "text-slate-900"
+              s.green ? "text-green-600 bg-green-50 px-2 py-0.5 rounded-lg border border-green-100" :
+                "text-slate-900"
               }`}>
               {s.value}
             </span>

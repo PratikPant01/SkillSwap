@@ -234,6 +234,23 @@ router.get("/:username", async (req, res) => {
 
 // --- Portfolio Endpoints ---
 
+// Upload portfolio project image
+router.post("/portfolio/upload", upload.single("image"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const filePath = req.file.path.replace(/\\/g, "/"); // Normalize path for web
+        const imageUrl = `http://localhost:5000/${filePath}`;
+
+        res.json({ success: true, imageUrl });
+    } catch (err) {
+        console.error("Portfolio image upload error:", err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 // Add portfolio project
 router.post("/portfolio", async (req, res) => {
     try {

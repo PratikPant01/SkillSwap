@@ -6,14 +6,16 @@ type Props = {
   onEdit: (section: string) => void;
   profile: any;
   onImageUpload: (file: File) => void;
+  isPublic?: boolean;
 };
 
-export default function ProfileHeader({ onEdit, profile, onImageUpload }: Props) {
+export default function ProfileHeader({ onEdit, profile, onImageUpload, isPublic }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!profile) return null;
 
   const handleImageClick = () => {
+    if (isPublic) return;
     fileInputRef.current?.click();
   };
 
@@ -29,7 +31,7 @@ export default function ProfileHeader({ onEdit, profile, onImageUpload }: Props)
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-bl-full -z-0 pointer-events-none" />
 
-      <EditButton onClick={() => onEdit("profile-header")} title="Edit Profile" />
+      {!isPublic && <EditButton onClick={() => onEdit("profile-header")} title="Edit Profile" />}
 
       <div className="flex flex-col sm:flex-row gap-8 items-start relative z-10">
         <div
@@ -46,10 +48,12 @@ export default function ProfileHeader({ onEdit, profile, onImageUpload }: Props)
             profile.username?.charAt(0).toUpperCase()
           )}
 
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-1 backdrop-blur-[2px]">
-            <Camera size={24} className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300" />
-            <span className="text-[10px] uppercase tracking-widest font-black">Upload</span>
-          </div>
+          {!isPublic && (
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-1 backdrop-blur-[2px]">
+              <Camera size={24} className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300" />
+              <span className="text-[10px] uppercase tracking-widest font-black">Upload</span>
+            </div>
+          )}
 
           <input
             type="file"
@@ -78,9 +82,11 @@ export default function ProfileHeader({ onEdit, profile, onImageUpload }: Props)
                 <MapPin size={14} className="text-blue-500" /> {profile.location}
               </div>
             )}
-            <div className="flex items-center gap-1.5 text-sm text-slate-400 font-semibold bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-              <Briefcase size={14} className="text-blue-500" /> {profile.credits || 0} Credits
-            </div>
+            {!isPublic && (
+              <div className="flex items-center gap-1.5 text-sm text-slate-400 font-semibold bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                <Briefcase size={14} className="text-blue-500" /> {profile.credits || 0} Credits
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4 mt-6">

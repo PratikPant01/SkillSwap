@@ -2,6 +2,7 @@
 
 import { SetStateAction, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import ProfileHeader from "./componets/main/ProfileHeader";
 import AboutSection from "./componets/main/AboutSection";
 import SkillsTeach from "./componets/skills/SkillsTeach";
@@ -15,6 +16,7 @@ import EditPortfolioModal, { PortfolioProject } from "./componets/modals/EditPor
 
 export default function SkillSwapProfile() {
     const router = useRouter();
+    const { updateUser } = useAuth();
     const [toast, setToast] = useState<string | null>(null);
     const [profile, setProfile] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -168,6 +170,10 @@ export default function SkillSwapProfile() {
             if (res.ok) {
                 const data = await res.json();
                 setProfile((prev: any) => ({ ...prev, profile_picture_url: data.photoUrl }));
+
+                // Update global auth state so navbar reflects the change
+                updateUser({ profile_picture_url: data.photoUrl });
+
                 setToast("Profile picture updated!");
                 setTimeout(() => setToast(null), 3000);
             } else {

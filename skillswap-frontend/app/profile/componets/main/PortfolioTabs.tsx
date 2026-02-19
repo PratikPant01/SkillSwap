@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Briefcase, ExternalLink, Edit2, CheckCircle, Clock } from "lucide-react";
+import { Briefcase, Calendar, ExternalLink, Plus, Edit2, ArrowUpRight, Globe, CheckCircle, Clock } from "lucide-react";
 
 type PortfolioProject = {
   id: number;
@@ -25,14 +25,21 @@ type Props = {
   completedServices: CompletedService[];
   onAddProject: () => void;
   onEditProject: (project: PortfolioProject) => void;
+  isPublic?: boolean;
 };
 
-export default function PortfolioTabs({ portfolio, completedServices, onAddProject, onEditProject }: Props) {
+export default function PortfolioTabs({ portfolio, completedServices, onAddProject, onEditProject, isPublic }: Props) {
   const [tab, setTab] = useState<"portfolio" | "services">("portfolio");
 
+  const ensureProtocol = (url: string) => {
+    if (!url) return "#";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `https://${url}`;
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-blue-50 overflow-hidden transition-all duration-300 hover:shadow-md">
-      <div className="flex border-b border-blue-100 bg-slate-50/50">
+    <div className="bg-white rounded-2xl shadow-sm border border-blue-100 p-8">
+      <div className="flex flex-wrap gap-4 mb-8 p-1.5 bg-slate-50 rounded-2xl border border-slate-100 w-fit">
         {[
           { key: "portfolio", label: "Portfolio" },
           { key: "services", label: "Completed Services" },
@@ -41,8 +48,8 @@ export default function PortfolioTabs({ portfolio, completedServices, onAddProje
             key={item.key}
             onClick={() => setTab(item.key as any)}
             className={`flex-1 py-4 text-sm font-bold transition-all ${tab === item.key
-                ? "text-blue-600 border-b-2 border-blue-600 bg-white"
-                : "text-slate-500 hover:bg-slate-100/50"
+              ? "text-blue-600 border-b-2 border-blue-600 bg-white"
+              : "text-slate-500 hover:bg-slate-100/50"
               }`}
           >
             {item.label}
@@ -57,12 +64,15 @@ export default function PortfolioTabs({ portfolio, completedServices, onAddProje
               <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <Briefcase size={20} className="text-blue-600" /> My Projects
               </h3>
-              <button
-                onClick={onAddProject}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors"
-              >
-                <Plus size={16} /> Add Project
-              </button>
+
+              {!isPublic && (
+                <button
+                  onClick={onAddProject}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors"
+                >
+                  <Plus size={16} /> Add Project
+                </button>
+              )}
             </div>
 
             {portfolio.length > 0 ? (
@@ -89,28 +99,31 @@ export default function PortfolioTabs({ portfolio, completedServices, onAddProje
                         <h4 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                           {project.title}
                         </h4>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => onEditProject(project)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                        </div>
+                        {!isPublic && (
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => onEditProject(project)}
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">
                         {project.description}
                       </p>
-                      {project.project_url && (
+                      <div className="flex items-center justify-between">
                         <a
-                          href={project.project_url}
+                          href={ensureProtocol(project.project_url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline"
+                          className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 text-sm font-bold transition-colors group/link"
                         >
-                          <ExternalLink size={12} /> View Project
+                          View Project
+                          <ArrowUpRight size={14} className="group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
                         </a>
-                      )}
+                      </div>
                     </div>
                   </div>
                 ))}

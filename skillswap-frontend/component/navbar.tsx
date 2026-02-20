@@ -196,7 +196,7 @@ export default function Navbar() {
           {/* Mobile Links */}
           <div className="flex flex-col gap-1">
             <Link
-              href="/posts/explore"
+              href="/browse"
               className="flex items-center gap-3 text-slate-700 font-medium hover:text-blue-600 hover:bg-blue-50 transition-colors px-3 py-2.5 rounded-lg"
               onClick={() => setMenuOpen(false)}
             >
@@ -204,7 +204,7 @@ export default function Navbar() {
               Explore
             </Link>
             <Link
-              href="/posts/create"
+              href="/post/create"
               className="flex items-center gap-3 text-slate-700 font-medium hover:text-blue-600 hover:bg-blue-50 transition-colors px-3 py-2.5 rounded-lg"
               onClick={() => setMenuOpen(false)}
             >
